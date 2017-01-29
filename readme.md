@@ -1,6 +1,11 @@
 How to install this module:
 
-Step1: Copy `payment` directory in your modules folder.
+
+Step1: First clone `payment` in your module folder
+```
+cd modules_folder
+git clone git@gitlab.com:aminkt/yii2-payment-module.git payment
+```
 
 Step2: Add flowing code into your `bootstrap.php` file in your project.
 ```
