@@ -18,6 +18,13 @@ namespace payment\models;
  */
 class TransactionData extends \yii\db\ActiveRecord
 {
+    const RESPONSE_STATUS_UNKNOWN = 1;
+    const RESPONSE_STATUS_OK = 2;
+    const RESPONSE_STATUS_FAILED = 3;
+
+    const INQUIRY_STATUS_UNKNOWN = 1;
+    const INQUIRY_STATUS_OK = 2;
+    const INQUIRY_STATUS_FAILED = 3;
     /**
      * @inheritdoc
      */

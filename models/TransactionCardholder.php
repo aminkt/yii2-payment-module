@@ -1,6 +1,8 @@
 <?php
 
 namespace payment\models;
+use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "{{%transaction_cardholder}}".
@@ -23,6 +25,20 @@ class TransactionCardholder extends \yii\db\ActiveRecord
     public static function tableName()
     {
         return '{{%transaction_cardholder}}';
+    }
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['createTime'],
+                ],
+                // if you're using datetime instead of UNIX timestamp:
+                // 'value' => new Expression('NOW()'),
+            ],
+        ];
     }
 
     /**

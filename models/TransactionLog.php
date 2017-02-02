@@ -20,6 +20,13 @@ namespace payment\models;
  */
 class TransactionLog extends \yii\db\ActiveRecord
 {
+    const STATUS_PAY_REQUEST = 'pay_request';
+    const STATUS_INQUIRY_REQUEST = 'inquiry_request';
+    const STATUS_SETTLE_REQUEST = 'inquiry_request';
+    const STATUS_VERIFY_REQUEST = 'verify_request';
+    const STATUS_REVERSAL_REQUEST = 'reversal_request';
+
+
     /**
      * @inheritdoc
      */

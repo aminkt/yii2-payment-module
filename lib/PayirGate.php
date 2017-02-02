@@ -92,4 +92,31 @@ class PayirGate extends AbstractGate
         Payment::incrementBlockCounter();
         return false;
     }
+
+    /**
+     * Return bank requests as array.
+     * @return mixed
+     */
+    public function getRequest()
+    {
+        // TODO: Implement getRequest() method.
+    }
+
+    /**
+     * Return bank response as array.
+     * @return mixed
+     */
+    public function getResponse()
+    {
+        // TODO: Implement getResponse() method.
+    }
+
+    /**
+     * Return Response code of bank
+     * @return string
+     */
+    public function getResponseCode()
+    {
+        // TODO: Implement getResponseCode() method.
+    }
 }

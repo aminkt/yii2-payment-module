@@ -18,6 +18,10 @@ class MellatGate extends AbstractGate
     private $client;
     private $namespace;
 
+    protected $response;
+    protected $responseCode;
+    protected $request;
+
     private function connectToWebService(){
         try{
             $this->client = new \SoapClient($this->identityData['webService'], array(
@@ -27,10 +31,10 @@ class MellatGate extends AbstractGate
             $this->namespace = 'http://interfaces.core.sw.bps.com/';
             return true;
         }catch (SoapFault $fault){
-            Payment::addError('اتصاب با وب سرویس برقرار نشد.');
+            Payment::addError('اتصال با وب سرویس برقرار نشد.');
             Payment::addError($fault->getMessage());
         }catch (\Exception $e){
-            Payment::addError('اتصاب با وب سرویس برقرار نشد.');
+            Payment::addError('اتصال با وب سرویس برقرار نشد.');
             Payment::addError($e->getMessage());
         }
         return false;
@@ -62,6 +66,7 @@ class MellatGate extends AbstractGate
                 'callBackUrl' => $this->getCallbackUrl(),
                 'payerId' => $this->identityData['payerId'],
             );
+            $this->request = $parameters;
 
             // ارسال درخواست پرداخت به سرور بانک
             $result1 = $this->client->bpPayRequest($parameters, $this->namespace);
@@ -72,6 +77,8 @@ class MellatGate extends AbstractGate
             $res = explode (',',$resultStr);
             if(is_array($res)){
                 $resCode = $res[0];
+                $this->response = $res;
+                $this->responseCode = $resCode;
                 if($resCode == 0){
                     $this->setTransactionId($res[1]);
                     $result = "0,".$this->getTransactionId();
@@ -120,6 +127,7 @@ class MellatGate extends AbstractGate
         parent::verifyTransaction();
         $request = \Yii::$app->request;
         $bankResponse = $request->post();
+        $this->response = $bankResponse;
         $resCode = $request->post('ResCode');
 
         $this->status = $resCode;
@@ -127,7 +135,7 @@ class MellatGate extends AbstractGate
         $this->setTransactionId($request->post('RefId'))
             ->setFactorNumber($request->post('SaleOrderId'))
             ->setTransTrackingCode($request->post('SaleReferenceId'));
-        $cardNumber = $request->post('CardHolderPan');
+        $this->cardHolder = $request->post('CardHolderPan');
         $additionalData = $request->post('additionalData');
 
         if($this->status !='0'){
@@ -151,12 +159,16 @@ class MellatGate extends AbstractGate
                 'saleReferenceId' => $this->getTransTrackingCode(),
             );
 
+            $this->request = $parameters;
+
             $result = $this->client->bpVerifyRequest($parameters, $this->namespace);
             $resultStr = $result->return;
             $res = explode(',', $resultStr);
 
             if(is_array($res)){
                 $resCode = $res[0];
+
+                $this->responseCode = $resultStr;
                 $this->status = $resCode;
 
                 if($resCode == 0 and $this->settleTransaction()) {
@@ -216,13 +228,15 @@ class MellatGate extends AbstractGate
                 'saleOrderId' => $this->getFactorNumber(),
                 'saleReferenceId' => $this->getTransTrackingCode(),
             );
+            $this->request = $parameters;
 
             $result = $this->client->bpInquiryRequest($parameters, $this->namespace);
             $resultStr = $result->return;
             $res = explode(',', $resultStr);
-
+            $this->response = $res;
             if(is_array($res)){
                 $resCode = $res[0];
+                $this->responseCode = $resCode;
                 $this->status = $resCode;
                 if($resCode == 0){
                     return true;
@@ -249,5 +263,32 @@ class MellatGate extends AbstractGate
      */
     private function localTime(){
         return date("Gis");
+    }
+
+    /**
+     * Return bank requests as array.
+     * @return mixed
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
+     * Return bank response as array.
+     * @return mixed
+     */
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
+    /**
+     * Return Response code of bank
+     * @return string
+     */
+    public function getResponseCode()
+    {
+        return $this->responseCode;
     }
 }

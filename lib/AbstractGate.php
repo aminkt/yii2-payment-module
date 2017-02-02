@@ -2,6 +2,7 @@
 
 namespace payment\lib;
 
+use common\modules\payment\components\PaymentEvent;
 use payment\components\Payment;
 use payment\models\Transaction;
 use yii\base\Component;
@@ -14,6 +15,7 @@ use yii\base\InvalidCallException;
 abstract class AbstractGate extends Component
 {
     public $status;
+    public $cardHolder;
     /** @var string  $factorNumber */
     protected $factorNumber;
     /** @var string  $transactionId */
@@ -41,16 +43,6 @@ abstract class AbstractGate extends Component
      * @return mixed
      */
     public function payRequest(){
-//        $transaction = $this->transactionModel();
-//        $transaction->status = $transaction::STATUS_UNKNOWN;
-//        if($transaction->save()){
-//            $transaction->trigger(Transaction::EVENT_PAY_TRANSACTION);
-//            return true;
-//        }else{
-//            \Yii::error($transaction->getErrors(), self::className());
-//            Payment::addError("Saving transaction model failed");
-//        }
-//        return false;
         return true;
     }
 
@@ -65,7 +57,7 @@ abstract class AbstractGate extends Component
      * @return AbstractGate|boolean
      */
     public function verifyTransaction(){
-        $this->transactionModel()->trigger(Transaction::EVENT_VERIFY_TRANSACTION);
+        return true;
     }
 
     /**
@@ -75,7 +67,7 @@ abstract class AbstractGate extends Component
      * @return bool
      */
     public function inquiryTransaction(){
-        $this->transactionModel()->trigger(Transaction::EVENT_INQUIRY_TRANSACTION);
+        return true;
     }
 
     /**
@@ -303,4 +295,22 @@ abstract class AbstractGate extends Component
         $this->identityData = $identityData;
         return $this;
     }
+
+    /**
+     * Return bank requests as array.
+     * @return mixed
+     */
+    public abstract function getRequest();
+
+    /**
+     * Return bank response as array.
+     * @return mixed
+     */
+    public abstract function getResponse();
+
+    /**
+     * Return Response code of bank
+     * @return string
+     */
+    public abstract function getResponseCode();
 }

@@ -11,6 +11,11 @@ class BitPayirGate extends AbstractGate
     public static $transBankName = 'BitPayir';
     public static $gateId = 'bPy2';
 
+
+    protected $response;
+    protected $request;
+    protected $responseCode;
+
     /**
      * Prepare data and config gate for payment.
      * @return mixed
@@ -25,6 +30,15 @@ class BitPayirGate extends AbstractGate
         $name = '';
         $email = '';
         $description = '';
+        $this->request = [
+            'api'=>$api,
+            'amount'=>$amount,
+            'redirect'=>$redirect,
+            'factorNumber'=>$factorNumber,
+            'name'=>$name,
+            'email'=>$email,
+            'description'=>$description,
+        ];
         $ch = curl_init();
         curl_setopt($ch,CURLOPT_URL,$this->getIdentityData('bankPayReqAddress'));
         curl_setopt($ch,CURLOPT_POSTFIELDS,"api=$api&amount=$amount&redirect=$redirect&factorId=$factorNumber&name=$name&email=$email&description=$description");
@@ -34,6 +48,7 @@ class BitPayirGate extends AbstractGate
         curl_close($ch);
 
         $this->status = $res;
+        $this->responseCode = $res;
 
         if($res > 0 && is_numeric($res))
         {
@@ -68,7 +83,7 @@ class BitPayirGate extends AbstractGate
         parent::verifyTransaction();
         $request = \Yii::$app->request;
         $api = $this->getIdentityData('api');
-        $bankResponse = $request->post();
+        $this->response = $request->post();
         $this->setTransTrackingCode($request->post('trans_id'));
         $this->setTransactionId($request->post('id_get'));
         $transId = $this->getTransactionId();
@@ -82,7 +97,13 @@ class BitPayirGate extends AbstractGate
         $res = curl_exec($ch);
         curl_close($ch);
 
+        $this->request = [
+            'api'=>$api,
+            'id_get'=>$transId,
+            'trans_id'=>$trackingCode
+        ];
         $this->status = $res;
+        $this->responseCode = $res;
 
         if($this->status == 1){
             return true;
@@ -92,5 +113,32 @@ class BitPayirGate extends AbstractGate
 
         Payment::incrementBlockCounter();
         return false;
+    }
+
+    /**
+     * Return bank requests as array.
+     * @return mixed
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
+     * Return bank response as array.
+     * @return mixed
+     */
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
+    /**
+     * Return Response code of bank
+     * @return string
+     */
+    public function getResponseCode()
+    {
+        return $this->responseCode;
     }
 }

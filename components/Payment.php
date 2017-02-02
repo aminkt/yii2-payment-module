@@ -1,8 +1,12 @@
 <?php
 namespace payment\components;
 
+use common\modules\payment\components\PaymentEvent;
 use payment\lib\AbstractGate;
 use payment\lib\PayirGate;
+use payment\models\Transaction;
+use payment\models\TransactionData;
+use payment\models\TransactionLog;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\web\Cookie;
@@ -73,7 +77,9 @@ class Payment extends Component{
                     $gate->setPrice($price)
                         ->setFactorNumber($factorNumber)
                         ->setCallbackUrl($this->callbackUr);
-                    if($payRequest = $gate->payRequest()){
+                    $payRequest = $gate->payRequest();
+                    $this->initNewTransactionModel($gate);
+                    if($payRequest){
                         $data = $gate->sendToBank();
                         \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
                         \Yii::$app->response->redirect(['/payment/default/send'])->send();
@@ -82,6 +88,7 @@ class Payment extends Component{
                     }else
                         throw new \RuntimeException();
                 }catch (\Exception $e){
+                    //$this->initNewTransactionModel($gate);
                     if($e->getMessage())
                         \Yii::error($e->getMessage(), self::className());
 
@@ -111,7 +118,9 @@ class Payment extends Component{
                     $gateObject = new $class();
                     $gateObject->setIdentityData($identityData);
                     self::$currentGateObject = $gateObject;
-                    if($verify = $gateObject->verifyTransaction()){
+                    $verify = $gateObject->verifyTransaction();
+                    $this->saveVerifyTransactionModel($gateObject);
+                    if($verify){
                         self::$currentGateObject = $gateObject;
                         return $verify;
                     }
@@ -155,7 +164,9 @@ class Payment extends Component{
                     $gateObject->setPrice($data['price']);
                 }
                 self::$currentGateObject = $gateObject;
-                if($inquiry = $gateObject->inquiryTransaction()){
+                $inquiry = $gateObject->inquiryTransaction();
+                $this->saveInquiryTransactionModel($gateObject);
+                if($inquiry){
                     self::$currentGateObject = $gateObject;
                     return $inquiry;
                 }
@@ -165,6 +176,55 @@ class Payment extends Component{
         }
         return false;
     }
+
+
+    /**
+     * Save transaction data in db when pay request send and return true if its work correctly.
+     * @param $gate AbstractGate
+     * @return bool
+     */
+    public function initNewTransactionModel($gate){
+        $transaction = $gate->transactionModel();
+        $transaction->status = $transaction::STATUS_UNKNOWN;
+        if($transaction->save()){
+            $event = new PaymentEvent();
+            $event->gate = $gate;
+            $event->time = time();
+            $transaction->trigger(Transaction::EVENT_PAY_TRANSACTION, $event);
+            return true;
+        }else{
+            \Yii::error($transaction->getErrors(), self::className());
+            Payment::addError("Saving transaction model failed");
+        }
+        return false;
+    }
+
+    /**
+     * Save transaction data in db when verify request send and return true if its work correctly.
+     * @param $gate AbstractGate
+     * @return bool
+     */
+    public function saveVerifyTransactionModel($gate){
+        $event = new PaymentEvent();
+        $event->gate = $gate;
+        $event->time = time();
+        $gate->transactionModel()->trigger(Transaction::EVENT_VERIFY_TRANSACTION, $event);
+        return true;
+    }
+
+    /**
+     * Save transaction data in db when inquiry request send and return true if its work correctly.
+     * @param $gate AbstractGate
+     * @return bool
+     */
+    public function saveInquiryTransactionModel($gate){
+        $event = new PaymentEvent();
+        $event->gate = $gate;
+        $event->time = time();
+        $gate->transactionModel()->trigger(Transaction::EVENT_INQUIRY_TRANSACTION, $event);
+        return true;
+    }
+
 
     /**
      * @return AbstractGate
