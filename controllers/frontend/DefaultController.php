@@ -60,9 +60,4 @@ class DefaultController extends Controller
             'verify'=>$verify,
         ]);
     }
-
-
-    public function actionTest(){
-
-    }
 }

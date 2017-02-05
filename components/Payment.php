@@ -103,7 +103,7 @@ class Payment extends Component{
 
     /**
      * Verify request
-     * @return bool
+     * @return bool|AbstractGate
      */
     public function verify(){
         if(!self::isBlocked()){
