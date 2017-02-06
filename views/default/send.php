@@ -2,7 +2,7 @@
 /** @var $view \yii\web\View */
 /** @var $data array */
 ?>
-<div class="<?= $this->context->action->id ?>" style="text-align: center; padding: 50px; color: #fff">
+<div class="<?= $this->context->action->id ?>" style="text-align: center; padding: 50px;">
     <?php if($data) : ?>
         <h1>لطفا کمی صبر کنید</h1>
     <?php else: ?>

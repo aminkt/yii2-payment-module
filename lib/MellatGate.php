@@ -75,18 +75,18 @@ class MellatGate extends AbstractGate
             }
             $resultStr = $result1->return;
             $res = explode (',',$resultStr);
+            $this->response = $res;
             if(is_array($res)){
                 $resCode = $res[0];
-                $this->response = $res;
                 $this->responseCode = $resCode;
                 if($resCode == 0){
                     $this->setTransactionId($res[1]);
                     $result = "0,".$this->getTransactionId();
-                    $this->status = $resCode;
+                    $this->status = true;
                     return true;
                 }else{
                     $result = $resCode.",null";
-                    $this->status = $resCode;
+                    $this->status = false;
                     Payment::addError('بانک ملت درحال حاضر خارج از سرویس میباشد.', $resCode);
                 }
             }
@@ -168,11 +168,13 @@ class MellatGate extends AbstractGate
             if(is_array($res)){
                 $resCode = $res[0];
 
-                $this->responseCode = $resultStr;
-                $this->status = $resCode;
+                $this->responseCode = $resCode;
 
                 if($resCode == 0 and $this->settleTransaction()) {
+                    $this->status = true;
                     return $this;
+                }else{
+                    $this->status = false;
                 }
             }else
                 Payment::addError('خطای سیستمی', -1);
@@ -237,9 +239,11 @@ class MellatGate extends AbstractGate
             if(is_array($res)){
                 $resCode = $res[0];
                 $this->responseCode = $resCode;
-                $this->status = $resCode;
                 if($resCode == 0){
+                    $this->status = true;
                     return true;
+                }else{
+                    $this->status = false;
                 }
             }
 

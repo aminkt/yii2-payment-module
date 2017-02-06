@@ -264,15 +264,15 @@ abstract class AbstractGate extends Component
      */
     public function setCallbackUrl($callbackUrl)
     {
-        $bank = $this->getTransBankName();
         $bank = Payment::encryptBankName(static::$gateId);
         $token = Payment::generatePaymentToken();
-        $getData = [
-            'bc'=>$bank,
-            'token'=>$token
-        ];
-        $callbackUrl = array_merge($callbackUrl, $getData);
-
+        $callbackUrl['bc']=$bank;
+        $callbackUrl['token']=$token;
+//        $getData = [
+//            'bc'=>$bank,
+//            'token'=>$token,
+//        ];
+//        $callbackUrl = array_merge($callbackUrl, $getData);
         $this->callbackUrl = \Yii::$app->getUrlManager()->createAbsoluteUrl($callbackUrl);
         return $this;
     }

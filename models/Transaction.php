@@ -166,6 +166,7 @@ class Transaction extends \yii\db\ActiveRecord
         $transactionData->save(false);
 
         // Save pay time.
+        $transactionModel->transTrackingCode = $event->gate->getTransTrackingCode();
         $transactionModel->status = $transactionModel::STATUS_UNKNOWN;
         $transactionModel->payTime = time();
         $transactionModel->save(false);
@@ -216,6 +217,7 @@ class Transaction extends \yii\db\ActiveRecord
         }
 
         // Edit Transaction
+        $transactionModel->transTrackingCode = $event->gate->getTransTrackingCode();
         if($event->gate->status)
             $transactionModel->status = $transactionModel::STATUS_SUCCESS;
         else
@@ -258,6 +260,8 @@ class Transaction extends \yii\db\ActiveRecord
         }
 
         // Edit Transaction
+
+        $transactionModel->transTrackingCode = $event->gate->getTransTrackingCode();
         if(!$event->gate->status)
             $transactionModel->status = $transactionModel::STATUS_INQUIRY_FAILED;
         $transactionModel->save(false);
