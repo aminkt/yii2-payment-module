@@ -1,6 +1,6 @@
 <?php
 
-namespace payment\controllers\backend;
+namespace aminkt\payment\controllers\backend;
 
 use yii\web\Controller;
 

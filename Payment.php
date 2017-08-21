@@ -1,6 +1,6 @@
 <?php
 
-namespace payment;
+namespace aminkt\payment;
 
 /**
  * payment module definition class

@@ -1,6 +1,8 @@
 <?php
-namespace payment\lib;
-use payment\components\Payment;
+
+namespace aminkt\payment\lib;
+
+use aminkt\payment\components\Payment;
 
 /**
  * Class PayirGate

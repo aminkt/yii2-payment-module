@@ -1,6 +1,6 @@
 <?php
 
-namespace payment\models;
+namespace aminkt\payment\models;
 
 /**
  * This is the model class for table "{{%transaction_data}}".

@@ -1,12 +1,13 @@
 <?php
-namespace payment\components;
 
-use common\modules\payment\components\PaymentEvent;
-use payment\lib\AbstractGate;
-use payment\lib\PayirGate;
-use payment\models\Transaction;
-use payment\models\TransactionData;
-use payment\models\TransactionLog;
+namespace aminkt\payment\components;
+
+use aminkt\payment\components\PaymentEvent;
+use aminkt\payment\lib\AbstractGate;
+use aminkt\payment\lib\PayirGate;
+use aminkt\payment\models\Transaction;
+use aminkt\payment\models\TransactionData;
+use aminkt\payment\models\TransactionLog;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\web\Cookie;

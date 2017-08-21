@@ -1,8 +1,8 @@
 <?php
 
-namespace payment\controllers\frontend;
+namespace aminkt\payment\controllers\frontend;
 
-use payment\components\Payment;
+use aminkt\payment\components\Payment;
 use yii\web\Controller;
 
 /**

@@ -1,7 +1,9 @@
 <?php
-namespace payment\lib;
+
+namespace aminkt\payment\lib;
+
 use nusoap_client;
-use payment\components\Payment;
+use aminkt\payment\components\Payment;
 
 /**
  * Class SamanGate

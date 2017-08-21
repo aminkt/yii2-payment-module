@@ -6,10 +6,10 @@
  * Created in telbit project
  */
 
-namespace common\modules\payment\components;
+namespace aminkt\payment\modules\payment\components;
 
 
-use payment\lib\AbstractGate;
+use aminkt\payment\lib\AbstractGate;
 use yii\base\Event;
 
 class PaymentEvent extends Event

@@ -1,9 +1,10 @@
 <?php
 
-namespace payment\models;
-use common\modules\payment\components\PaymentEvent;
-use payment\components\Payment;
-use payment\lib\AbstractGate;
+namespace aminkt\payment\models;
+
+use aminkt\payment\components\PaymentEvent;
+use aminkt\payment\components\Payment;
+use aminkt\payment\lib\AbstractGate;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 

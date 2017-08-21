@@ -1,10 +1,10 @@
 <?php
 
-namespace payment\lib;
+namespace aminkt\payment\lib;
 
-use common\modules\payment\components\PaymentEvent;
-use payment\components\Payment;
-use payment\models\Transaction;
+use aminkt\payment\components\PaymentEvent;
+use aminkt\payment\components\Payment;
+use aminkt\payment\models\Transaction;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 
