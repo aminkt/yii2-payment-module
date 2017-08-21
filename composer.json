@@ -1,26 +1,26 @@
 {
-	"name": "aminkt/yii2-payment-module",
-	"description": "Online payment module for  yii2",
-  	"keywords": ["yii", "payment", "gateway", "online", "shopping"],
-	"type": "yii2-extension",
-	"support": {
-		"source": "https://gitlab.com/aminkt/yii2-payment-module"
-	},
-	"authors": [
-		{
-			"name": "Amin Keshavarz",
-			"email": "ak_1596@yahoo.com"
-		}
-	],
+    "name": "aminkt/yii2-payment-module",
+    "description": "Online payment module for  yii2",
+    "keywords": ["yii", "payment", "gateway", "online", "shopping"],
+    "type": "yii2-extension",
+    "support": {
+    	"source": "https://gitlab.com/aminkt/yii2-payment-module"
+    },
+    "authors": [
+    	{
+    		"name": "Amin Keshavarz",
+    		"email": "ak_1596@yahoo.com"
+    	}
+    ],
     "require": {
         "yiisoft/yii2": "~2.0.11"
     },
-	"autoload": {
-		"psr-4": {
-			"aminkt\\payment\\": ""
-		}
-	},
-	"extra": {
+    "autoload": {
+    	"psr-4": {
+    		"aminkt\\payment\\": ""
+    	}
+    },
+    "extra": {
         "branch-alias": {
           "dev-master": "master"
         }
