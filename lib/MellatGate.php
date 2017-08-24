@@ -3,10 +3,21 @@
 namespace aminkt\payment\lib;
 
 use aminkt\payment\components\Payment;
+use aminkt\payment\exceptions\ConnectionException;
+use aminkt\payment\exceptions\VerifyPaymentException;
+use SoapClient;
 use SoapFault;
 
 /**
  * Class MellatGate
+ *
+ * @method string getIdentityTerminalId() Return terminal id.
+ * @method string getIdentityUserName() Return user name.
+ * @method string getIdentityPassword() Return Password.
+ * @method string getIdentityPayerId()  Return payer id.
+ * @method string getIdentityWebService()   Return webservice address.
+ * @method string getIdentityBankGatewayAddress()   Return bank gateway address.
+ *
  * @package payment\lib
  */
 class MellatGate extends AbstractGate
@@ -14,54 +25,67 @@ class MellatGate extends AbstractGate
     public static $transBankName = 'Mellat';
     public static $gateId = 'Masdawf8';
 
-    /** @var  string $refId bank referenced if*/
-    public $refId;
-
     private $client;
     private $namespace;
 
     protected $response;
-    protected $responseCode;
+    protected $statusCode;
     protected $request;
+
+    /**
+     * @inheritdoc
+     */
+    public function dispatchRequest()
+    {
+        $this->statusCode = $_POST['ResCode'] == '0';
+        if (isset($_POST['ResCode']) && $_POST['ResCode'] == '0' && !empty($_POST['RefId'])) {
+            $this->setAuthority($_POST['RefId']);
+            if (!empty($_POST['CardHolderPan'])) {
+                //todo when user pay with mobile mellat will post CardHolderPan with 2 less stars
+                if (strlen($_POST['CardHolderPan']) == 14) {
+                    $_POST['CardHolderPan'] = str_replace('****', '******', $_POST['CardHolderPan']);
+                }
+                $this->setCardPan($_POST['CardHolderPan']);
+                $this->setCardHash($_POST['CardHolderInfo']);
+                $this->setTrackingCode($_POST['SaleReferenceId']);
+            }
+            return true;
+        }
+        return false;
+    }
 
     private function connectToWebService(){
         try{
-            $this->client = new \SoapClient($this->identityData['webService'], array(
+            $this->client = new SoapClient($this->identityData['webService'], array(
                 'exceptions' => true,
                 'cache_wsdl' => WSDL_CACHE_NONE,
                 ));
             $this->namespace = 'http://interfaces.core.sw.bps.com/';
             return true;
         }catch (SoapFault $fault){
-            Payment::addError('اتصال با وب سرویس برقرار نشد.');
-            Payment::addError($fault->getMessage());
+            throw $fault;
         }catch (\Exception $e){
-            Payment::addError('اتصال با وب سرویس برقرار نشد.');
-            Payment::addError($e->getMessage());
+            throw $e;
         }
-        return false;
     }
 
     /**
-     * Prepare data and config gate for payment.
-     * @return mixed
+     * @inheritdoc
      */
     public function payRequest()
     {
-        if(!parent::payRequest())
-            return false;
         try{
             if(!$this->connectToWebService()){
-                Payment::addError('امکان اتصال به درگاه وجود ندارد');
-                return false;
+                throw new ConnectionException("Can not connect to Mellat bank web service.", 1);
             }
+
             // قرار دادن پارامترها در یک آرایه
             $parameters = array(
-                'terminalId' => $this->getIdentityData('terminalId'),
-                'userName' => $this->getIdentityData('userName'),
-                'userPassword' => $this->getIdentityData('password'),
-                'orderId' => $this->getFactorNumber(),
-                'amount' => $this->getPrice(),
+                'terminalId' => $this->getIdentityTerminalId(),
+                'userName' => $this->getIdentityUserName(),
+                'userPassword' => $this->getIdentityPassword(),
+                'orderId' => $this->getOrderId(),
+                'amount' => $this->getAmount(),
                 'localDate' => $this->localDate(),
                 'localTime' => $this->localTime(),
                 'additionalData' => null,
@@ -73,47 +97,42 @@ class MellatGate extends AbstractGate
             // ارسال درخواست پرداخت به سرور بانک
             $result1 = $this->client->bpPayRequest($parameters, $this->namespace);
             if (is_soap_fault($result1)) {
-                new \RuntimeException("Can not connect to Mellat bank web service.");
+                throw new ConnectionException("Mellat bank cant handle pay request action.", 2);
             }
+
             $resultStr = $result1->return;
             $res = explode (',',$resultStr);
             $this->response = $res;
+
             if(is_array($res)){
                 $resCode = $res[0];
-                $this->responseCode = $resCode;
                 if($resCode == 0){
-                    $this->setTransactionId($res[1]);
-                    $result = "0,".$this->getTransactionId();
-                    $this->status = true;
+                    $this->setAuthority($res[1]);
                     return true;
                 }else{
-                    $result = $resCode.",null";
-                    $this->status = false;
-                    Payment::addError('بانک ملت درحال حاضر خارج از سرویس میباشد.', $resCode);
+                    throw new ConnectionException("Mellat bank is not in service.", 3);
                 }
             }
         }catch (SoapFault $f) {
-            Payment::addError('خطا در ارسال درخواست به بانک ملت.');
-            Payment::addError($f->getMessage());
+            throw new ConnectionException($f->getMessage(), 4, $f);
         }catch (\Exception $e){
-            Payment::addError('خطا در ارسال درخواست به بانک ملت.');
-            Payment::addError($e->getMessage());
+            throw new ConnectionException($e->getMessage(), 5, $e);
         }
 
         return false;
     }
 
     /**
-     * Send user to bank page.
-     * @return mixed
+     * @inheritdoc
      */
-    public function sendToBank()
+    public function redirectToBankFormData()
     {
         $bankUrl = $this->getIdentityData('bankGatewayAddress');
-        $refId = $this->getTransactionId();
+        $refId = $this->getAuthority();
         $data = [
-            'bankUrl'=>$bankUrl,
-            'post'=>[
+            'action' => $bankUrl,
+            'method' => 'post',
+            'inputs' => [
                 'RefId'=>$refId,
             ]
         ];
@@ -126,39 +145,25 @@ class MellatGate extends AbstractGate
      */
     public function verifyTransaction()
     {
-        parent::verifyTransaction();
-        $request = \Yii::$app->request;
-        $bankResponse = $request->post();
-        $this->response = $bankResponse;
-        $resCode = $request->post('ResCode');
+        $status = $this->dispatchRequest();
 
-        $this->status = $resCode;
-
-        $this->setTransactionId($request->post('RefId'))
-            ->setFactorNumber($request->post('SaleOrderId'))
-            ->setTransTrackingCode($request->post('SaleReferenceId'));
-        $this->cardHolder = $request->post('CardHolderPan');
-        $additionalData = $request->post('additionalData');
-
-        if($this->status !='0'){
-            Payment::addError('پرداخت نا موفق', $this->status, true);
-            return false;
+        if (!$status) {
+            throw new VerifyPaymentException("Payment become failed because of " . $this->statusCode, $this->statusCode);
         }
 
         try{
             if(!$this->connectToWebService()){
-                Payment::addError('امکان اتصال به درگاه وجود ندارد');
-                return false;
+                throw new ConnectionException("Can not connect to Mellat bank web service.", 1);
             }
 
             // قرار دادن پارامترها در یک آرای
             $parameters = array(
-                'terminalId' => $this->getIdentityData('terminalId'),
-                'userName' => $this->getIdentityData('userName'),
-                'userPassword' => $this->getIdentityData('password'),
-                'orderId' => $this->getFactorNumber(),
-                'saleOrderId' => $this->getFactorNumber(),
-                'saleReferenceId' => $this->getTransTrackingCode(),
+                'terminalId' => $this->getIdentityTerminalId(),
+                'userName' => $this->getIdentityUserName(),
+                'userPassword' => $this->getIdentityPassword(),
+                'orderId' => $this->getOrderId(),
+                'saleOrderId' => $this->getOrderId(),
+                'saleReferenceId' => $this->getTrackingCode(),
             );
 
             $this->request = $parameters;
@@ -169,36 +174,34 @@ class MellatGate extends AbstractGate
 
             if(is_array($res)){
                 $resCode = $res[0];
-
-                $this->responseCode = $resCode;
-
+                $this->response = array_merge($_POST, $res);
                 if($resCode == 0 and $this->settleTransaction()) {
-                    $this->status = true;
                     return $this;
-                }else{
-                    $this->status = false;
                 }
             }else
-                Payment::addError('خطای سیستمی', -1);
+                throw new \RuntimeException("Response not converted to array.", 2);
 
-            Payment::incrementBlockCounter();
             return false;
         }catch(\Exception $e){
-            Payment::addError($e->getMessage());
+            throw new VerifyPaymentException($e->getMessage(), $e->getCode(), $e);
         }
 
         return false;
     }
 
-    public function settleTransaction()
+    /**
+     * Send settlement request to bank.
+     * @return bool
+     */
+    private function settleTransaction()
     {
         $parameters = [
-            'terminalId' => $this->getIdentityData('terminalId'),
-            'userName' => $this->getIdentityData('userName'),
-            'userPassword' => $this->getIdentityData('password'),
-            'orderId' => $this->getFactorNumber(),
-            'saleOrderId' => $this->getFactorNumber(),
-            'saleReferenceId' => $this->getTransTrackingCode(),
+            'terminalId' => $this->getIdentityTerminalId(),
+            'userName' => $this->getIdentityUserName(),
+            'userPassword' => $this->getIdentityPassword(),
+            'orderId' => $this->getOrderId(),
+            'saleOrderId' => $this->getOrderId(),
+            'saleReferenceId' => $this->getTrackingCode(),
         ];
 
         $result = $this->client->bpSettleRequest($parameters, $this->namespace);
@@ -206,31 +209,32 @@ class MellatGate extends AbstractGate
         $res = explode(',', $resultStr);
 
         $resCode = $res[0];
-        $this->status = $resCode;
+        $this->statusCode = $resCode;
         if($resCode == 0){
             return true;
         }
-
         return false;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function inquiryTransaction()
     {
         parent::inquiryTransaction();
         try{
             if(!$this->connectToWebService()){
-                Payment::addError('امکان اتصال به درگاه وجود ندارد');
-                return false;
+                throw new ConnectionException("Can not connect to Mellat bank web service.", 1);
             }
 
             // قرار دادن پارامترها در یک آرای
             $parameters = array(
-                'terminalId' => $this->getIdentityData('terminalId'),
-                'userName' => $this->getIdentityData('userName'),
-                'userPassword' => $this->getIdentityData('password'),
-                'orderId' => $this->getFactorNumber(),
-                'saleOrderId' => $this->getFactorNumber(),
-                'saleReferenceId' => $this->getTransTrackingCode(),
+                'terminalId' => $this->getIdentityTerminalId(),
+                'userName' => $this->getIdentityUserName(),
+                'userPassword' => $this->getIdentityPassword(),
+                'orderId' => $this->getOrderId(),
+                'saleOrderId' => $this->getOrderId(),
+                'saleReferenceId' => $this->getTrackingCode(),
             );
             $this->request = $parameters;
 
@@ -240,17 +244,14 @@ class MellatGate extends AbstractGate
             $this->response = $res;
             if(is_array($res)){
                 $resCode = $res[0];
-                $this->responseCode = $resCode;
+                $this->statusCode = $resCode;
                 if($resCode == 0){
-                    $this->status = true;
                     return true;
-                }else{
-                    $this->status = false;
                 }
             }
 
         } catch (\Exception $e) {
-            Payment::addError($e->getMessage());
+            throw new ConnectionException($e->getMessage(), $e->getCode(), $e);
         }
         return false;
     }
@@ -273,7 +274,7 @@ class MellatGate extends AbstractGate
 
     /**
      * Return bank requests as array.
-     * @return mixed
+     * @return array
      */
     public function getRequest()
     {
@@ -282,19 +283,11 @@ class MellatGate extends AbstractGate
 
     /**
      * Return bank response as array.
-     * @return mixed
+     * @return array
      */
     public function getResponse()
     {
         return $this->response;
     }
 
-    /**
-     * Return Response code of bank
-     * @return string
-     */
-    public function getResponseCode()
-    {
-        return $this->responseCode;
-    }
 }
