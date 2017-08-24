@@ -5,31 +5,27 @@ namespace aminkt\payment\models;
 use Yii;
 
 /**
- * This is the model class for table "{{%transaction_log}}".
+ * This is the model class for table "{{%transaction_inquiries}}".
  *
  * @property integer $id
- * @property string $sessionId
- * @property string $bankDriver
- * @property string $status
- * @property string $request
- * @property string $response
- * @property string $responseCode
+ * @property integer $sessionId
+ * @property integer $status
  * @property string $description
- * @property string $ip
- * @property string $time
+ * @property string $updateAt
+ * @property string $createAt
  *
  * @property TransactionSession $transactionSession
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  */
-class TransactionLog extends \yii\db\ActiveRecord
+class TransactionInquiry extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return '{{%transaction_log}}';
+        return '{{%transaction_inquiries}}';
     }
 
     /**
@@ -39,9 +35,9 @@ class TransactionLog extends \yii\db\ActiveRecord
     {
         return [
             [['sessionId'], 'required'],
-            [['request', 'response', 'responseCode', 'description'], 'string'],
-            [['time'], 'safe'],
-            [['sessionId', 'bankDriver', 'status', 'ip'], 'string', 'max' => 255],
+            [['sessionId', 'status'], 'integer'],
+            [['description'], 'string'],
+            [['updateAt', 'createAt'], 'safe'],
         ];
     }
 
@@ -53,14 +49,10 @@ class TransactionLog extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'sessionId' => 'Session ID',
-            'bankDriver' => 'Bank Driver',
             'status' => 'Status',
-            'request' => 'Request',
-            'response' => 'Response',
-            'responseCode' => 'Response Code',
             'description' => 'Description',
-            'ip' => 'Ip',
-            'time' => 'Time',
+            'updateAt' => 'Update At',
+            'createAt' => 'Create At',
         ];
     }
 

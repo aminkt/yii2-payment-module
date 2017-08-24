@@ -2,11 +2,11 @@
 return [
     'components' => [
         'payment' => [
-            'class' => 'payment\components\Payment',
+            'class' => 'aminkt\payment\components\Payment',
             'callbackUr'=>['/payment/default/verify'],
             'gates'=>[
-                \payment\lib\MellatGate::$gateId =>[
-                    'class'=>\payment\lib\MellatGate::className(),
+                \aminkt\payment\lib\MellatGate::$gateId => [
+                    'class' => \aminkt\payment\lib\MellatGate::className(),
                     'identityData'=>[
                         'terminalId'=>'2149425',
                         'userName'=>'telbit85',
@@ -16,8 +16,8 @@ return [
                         'bankGatewayAddress'=>'https://bpm.shaparak.ir/pgwchannel/startpay.mellat',
                     ]
                 ],
-                \payment\lib\BitPayirGate::$gateId =>[
-                    'class'=>\payment\lib\BitPayirGate::className(),
+                \aminkt\payment\lib\BitPayirGate::$gateId => [
+                    'class' => \aminkt\payment\lib\BitPayirGate::className(),
                     'identityData'=>[
                         'api'=>'426c0b5263ac68b52c17be2d35ff67a5',
                         'bankPayReqAddress'=>'http://bitpay.ir/payment/gateway-send',

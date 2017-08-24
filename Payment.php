@@ -10,7 +10,7 @@ class Payment extends \yii\base\Module
     /**
      * @inheritdoc
      */
-    public $controllerNamespace = 'payment\controllers\frontend';
+    public $controllerNamespace = 'aminkt\payment\controllers\frontend';
 
     /**
      * @inheritdoc

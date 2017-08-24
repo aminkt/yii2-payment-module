@@ -1,17 +1,16 @@
 <?php
-/**
- * Created by Amin Keshavarz
- * Date: 01/02/2017
- * Time: 04:47 PM
- * Created in telbit project
- */
 
-namespace aminkt\payment\modules\payment\components;
+namespace aminkt\payment\components;
 
 
 use aminkt\payment\lib\AbstractGate;
 use yii\base\Event;
 
+/**
+ * Class PaymentEvent
+ * @author Amin Keshavarz <ak_1596@yahoo.com>
+ * @package aminkt\payment\components
+ */
 class PaymentEvent extends Event
 {
     /** @var  AbstractGate $gate */
