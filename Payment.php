@@ -7,6 +7,10 @@ namespace aminkt\payment;
  */
 class Payment extends \yii\base\Module
 {
+    const EVENT_PAYMENT_REQUEST = 'payment_req';
+    const EVENT_PAYMENT_VERIFY = 'payment_verify';
+    const EVENT_PAYMENT_INQUIRY = 'payment_inquiry';
+
     /**
      * @inheritdoc
      */

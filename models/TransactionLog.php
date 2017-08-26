@@ -2,7 +2,9 @@
 
 namespace aminkt\payment\models;
 
-use Yii;
+use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
+use yii\db\Expression;
 
 /**
  * This is the model class for table "{{%transaction_log}}".
@@ -22,8 +24,28 @@ use Yii;
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  */
-class TransactionLog extends \yii\db\ActiveRecord
+class TransactionLog extends ActiveRecord
 {
+    const STATUS_PAYMENT_REQ = "payment_request";
+    const STATUS_PAYMENT_VERIFY = "payment_verify";
+    const STATUS_PAYMENT_INQUIRY = "payment_inquiry";
+    const STATUS_UNKNOWN = "unknown";
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => TimestampBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['time'],
+                    ActiveRecord::EVENT_BEFORE_UPDATE => ['time'],
+                ],
+                // if you're using datetime instead of UNIX timestamp:
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+
     /**
      * @inheritdoc
      */

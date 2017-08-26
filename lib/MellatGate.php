@@ -106,17 +106,20 @@ class MellatGate extends AbstractGate
 
             if(is_array($res)){
                 $resCode = $res[0];
+                $this->statusCode = $resCode;
                 if($resCode == 0){
                     $this->setAuthority($res[1]);
                     return true;
                 }else{
                     throw new ConnectionException("Mellat bank is not in service.", 3);
                 }
-            }
+            } else
+                throw new \RuntimeException("Response not converted to array.", 4);
+
         }catch (SoapFault $f) {
-            throw new ConnectionException($f->getMessage(), 4, $f);
+            throw new ConnectionException($f->getMessage(), 5, $f);
         }catch (\Exception $e){
-            throw new ConnectionException($e->getMessage(), 5, $e);
+            throw new ConnectionException($e->getMessage(), 6, $e);
         }
 
         return false;
@@ -174,6 +177,7 @@ class MellatGate extends AbstractGate
 
             if(is_array($res)){
                 $resCode = $res[0];
+                $this->statusCode = $resCode;
                 $this->response = array_merge($_POST, $res);
                 if($resCode == 0 and $this->settleTransaction()) {
                     return $this;
@@ -247,8 +251,12 @@ class MellatGate extends AbstractGate
                 $this->statusCode = $resCode;
                 if($resCode == 0){
                     return true;
+                } else {
+                    return false;
                 }
-            }
+            } else
+                throw new \RuntimeException("Response not converted to array.", 2);
+
 
         } catch (\Exception $e) {
             throw new ConnectionException($e->getMessage(), $e->getCode(), $e);
@@ -290,4 +298,12 @@ class MellatGate extends AbstractGate
         return $this->response;
     }
 
+    /**
+     * Return status of pay request, verify or inquiry request.
+     * @return boolean
+     */
+    public function getStatus()
+    {
+        return $this->statusCode == 0;
+    }
 }

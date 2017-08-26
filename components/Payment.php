@@ -3,13 +3,21 @@
 namespace aminkt\payment\components;
 
 use aminkt\payment\components\PaymentEvent;
+use aminkt\payment\exceptions\ConnectionException;
+use aminkt\payment\exceptions\SecurityException;
+use aminkt\payment\exceptions\VerifyPaymentException;
 use aminkt\payment\lib\AbstractGate;
 use aminkt\payment\lib\PayirGate;
 use aminkt\payment\models\Transaction;
 use aminkt\payment\models\TransactionData;
+use aminkt\payment\models\TransactionInquiry;
 use aminkt\payment\models\TransactionLog;
+use aminkt\payment\models\TransactionSession;
+use aminkt\userAccounting\exceptions\RuntimeException;
 use yii\base\Component;
 use yii\base\InvalidCallException;
+use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\web\Cookie;
 
 /**
@@ -17,8 +25,10 @@ use yii\web\Cookie;
  * @package payment\components
  */
 class Payment extends Component{
+
     /** @var  string[] $gates */
     public $gates;
+
     /** @var array $callbackUrl array for show router of callback */
     public $callbackUr = ['/payment/default/verify'];
 
@@ -67,37 +77,51 @@ class Payment extends Component{
 
     /**
      * Send pay request to bank
-     * @param integer $price
-     * @param string $factorNumber
-     * @return boolean
+     *
+     * @param integer $amount Amount in IR TOMAN.
+     * @param string $orderId
+     * @param string $description
+     *
+     * @return boolean|array    Return an array that represent data to redirect user to bank gateway.
      */
-    public function payRequest($price, $factorNumber){
+    public function payRequest($amount, $orderId, $description = null)
+    {
         if(!static::isBlocked()){
             foreach (static::$gatesObjects as $gate){
                 try{
-                    $gate->setPrice($price)
-                        ->setFactorNumber($factorNumber)
+                    self::$currentGateObject = $gate;
+                    self::$currentGateObject->setAmount($amount)
                         ->setCallbackUrl($this->callbackUr);
-                    $payRequest = $gate->payRequest();
-                    $this->initNewTransactionModel($gate);
+                    $payRequest = self::$currentGateObject->payRequest();
+
+                    $sessionId = $this->savePaymentDataIntoDatabase(self::$currentGateObject, $orderId, $description);
+                    self::$currentGateObject->setOrderId($sessionId);
+
                     if($payRequest){
-                        $data = $gate->sendToBank();
-                        \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
+                        $data = self::$currentGateObject->redirectToBankFormData();
                         \Yii::$app->response->redirect(['/payment/default/send'])->send();
-                        self::$currentGateObject = $gate;
-                        return true;
+                        return $data;
                     }else
                         throw new \RuntimeException();
-                }catch (\Exception $e){
-                    //$this->initNewTransactionModel($gate);
-                    if($e->getMessage())
-                        \Yii::error($e->getMessage(), self::className());
 
-                    \Yii::error("Gate of ".$gate->getTransBankName()." not available now.", self::className());
+                } catch (ConnectionException $exception) {
+                    \Yii::error("Gate of " . $gate->getPSPName() . " not available now.", self::className());
+                    \Yii::error($exception->getMessage(), self::className());
+                    \Yii::error($exception->getTrace(), self::className());
+                } catch (\RuntimeException $exception) {
+                    \Yii::error("Gate of " . $gate->getPSPName() . " has problem in payment request.", self::className());
+                    \Yii::error($exception->getMessage(), self::className());
+                    \Yii::error($exception->getTrace(), self::className());
+                } catch (\Exception $exception) {
+                    \Yii::error("Gate of " . $gate->getPSPName() . " has a hard error while trying to send payment request.", self::className());
+                    \Yii::error($exception->getMessage(), self::className());
+                    \Yii::error($exception->getTrace(), self::className());
                 }
             }
+
+            static::addError("Can not connect to bank gates. All gates are into problem.", 1);
         }else{
-            static::addError("User blocked and services is not available right now.");
+            static::addError("User blocked and services is not available right now.", 112);
         }
         return false;
     }
@@ -113,24 +137,36 @@ class Payment extends Component{
             if($bankName = self::validatePayment($token, $bankCode)){
                 if (key_exists($bankName, $this->gates)){
                     $gateConfig = $this->gates[$bankName];
-                    $class = $gateConfig['class'];
-                    $identityData = $gateConfig['identityData'];
-                    /** @var AbstractGate $gateObject */
-                    $gateObject = new $class();
-                    $gateObject->setIdentityData($identityData);
-                    self::$currentGateObject = $gateObject;
-                    $verify = $gateObject->verifyTransaction();
-                    $this->saveVerifyTransactionModel($gateObject);
-                    if($verify){
+                    try {
+                        /** @var AbstractGate $gateObject */
+                        $gateObject = new $gateConfig['class']();
+                        $gateObject->setIdentityData($gateConfig['identityData']);
                         self::$currentGateObject = $gateObject;
-                        return $verify;
+
+                        $verify = self::$currentGateObject->verifyTransaction();
+                        $this->saveVerifyDataIntoDatabase(self::$currentGateObject);
+                        if ($verify) {
+                            return $verify;
+                        }
+                    } catch (VerifyPaymentException $exception) {
+
+                    } catch (SecurityException $exception) {
+
+                    } catch (ConnectionException $exception) {
+
+                    } catch (\RuntimeException $exception) {
+
+                    } catch (\Exception $exception) {
+
                     }
+                } else {
+                    static::addError("Security error when try to tracking payment.\nDefined PSP is not valid.", 111, true);
                 }
-            }else{
-                static::addError("Security error when try to tracking payment.");
+            } else {
+                static::addError("Security error when try to tracking payment.", 111, true);
             }
-        }else{
-            static::addError("User blocked and services is not available right now.");
+        } else {
+            static::addError("User blocked and services is not available right now.", 112);
         }
         return false;
     }
@@ -145,71 +181,153 @@ class Payment extends Component{
     public function inquiry($bank, $data=[]){
         if(!self::isBlocked()){
             if (key_exists($bank, $this->gates)){
-                $gateConfig = $this->gates[$bank];
-                $class = $gateConfig['class'];
-                $identityData = $gateConfig['identityData'];
-                /** @var AbstractGate $gateObject */
-                $gateObject = new $class();
-                $gateObject->setIdentityData($identityData);
+                try {
+                    $gateConfig = $this->gates[$bank];
 
-                if(key_exists('factorNumber', $data)){
-                    $gateObject->setFactorNumber($data['factorNumber']);
-                }
-                if(key_exists('transactionId', $data)){
-                    $gateObject->setTransactionId($data['transactionId']);
-                }
-                if(key_exists('transTrackingCode', $data)){
-                    $gateObject->setTransTrackingCode($data['transTrackingCode']);
-                }
-                if(key_exists('price', $data)){
-                    $gateObject->setPrice($data['price']);
-                }
-                self::$currentGateObject = $gateObject;
-                $inquiry = $gateObject->inquiryTransaction();
-                $this->saveInquiryTransactionModel($gateObject);
-                if($inquiry){
+                    /** @var AbstractGate $gateObject */
+                    $gateObject = new $gateConfig['class']();
+                    $gateObject->setIdentityData($gateConfig['identityData']);
+
+                    $gateObject->setOrderId(ArrayHelper::getValue($data, 'orderId'))
+                        ->setAuthority(ArrayHelper::getValue($data, 'authority'))
+                        ->setTrackingCode(ArrayHelper::getValue($data, 'trackingCode'))
+                        ->setAmount(ArrayHelper::getValue($data, 'amount', 0));
+
                     self::$currentGateObject = $gateObject;
-                    return $inquiry;
+                    $inquiry = self::$currentGateObject->inquiryTransaction();
+                    $this->saveInquiryDataIntoDatabase(self::$currentGateObject);
+                    if ($inquiry) {
+                        return $inquiry;
+                    }
+                } catch (ConnectionException $exception) {
+
+                } catch (\RuntimeException $exception) {
+
+                } catch (\Exception $exception) {
+
                 }
+            } else {
+                static::addError("Security error when try to tracking payment.\nDefined PSP is not valid.", 111, true);
             }
         }else{
-            static::addError("User blocked and services is not available right now.");
+            static::addError("User blocked and services is not available right now.", 112);
         }
         return false;
     }
 
 
     /**
-     * Save transaction data in db when pay request send and return true if its work correctly.
-     * @param $gate AbstractGate
-     * @return bool
+     * Save payment data in db when pay request send and return true if its work correctly.
+     *
+     * @param AbstractGate $gate
+     * @param string $orderId
+     * @param string $description
+     * @return string Return false if not saved into database and if saving was successful return primary key value.
      */
-    public function initNewTransactionModel($gate){
-        $transaction = $gate->transactionModel();
-        $transaction->status = $transaction::STATUS_UNKNOWN;
-        if($transaction->save()){
+    public function savePaymentDataIntoDatabase($gate, $orderId, $description)
+    {
+        // Create transaction session data.
+        $transactionSession = new TransactionSession();
+        $transactionSession->authority = $gate->getAuthority();
+        $transactionSession->orderId = $orderId;
+        $transactionSession->psp = $gate::className();
+        $transactionSession->amount = $gate->getAmount();
+        $transactionSession->description = Html::encode($description);
+        $transactionSession->status = TransactionSession::STATUS_NOT_PAID;
+        $transactionSession->type = TransactionSession::TYPE_WEB_BASE;
+        $transactionSession->ip = \Yii::$app->getRequest()->getUserIP();
+        if ($transactionSession->save()) {
+            /**
+             * Set transaction session id as payment order id.
+             * Actual order id can be access from database later.
+             **/
+            $gate->setOrderId($transactionSession->id);
+
+            /**
+             * Save transactions logs.
+             */
+            self::saveLogData($transactionSession, $gate, TransactionLog::STATUS_PAYMENT_REQ);
+
+            /**
+             * Throw an verify event. can be used in kernel to save and modify transactions.
+             */
+            $transactionSession = TransactionSession::findOne($gate->getOrderId());
             $event = new PaymentEvent();
-            $event->gate = $gate;
-            $event->time = time();
-            $transaction->trigger(Transaction::EVENT_PAY_TRANSACTION, $event);
-            return true;
-        }else{
-            \Yii::error($transaction->getErrors(), self::className());
-            Payment::addError("Saving transaction model failed");
+            $event->setGate($gate)
+                ->setStatus($gate->getStatus())
+                ->setTransactionSession($transactionSession);
+            $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_REQUEST, $event);
+
+            return $transactionSession->id;
         }
-        return false;
+
+        \Yii::error($transactionSession->getErrors(), self::className());
+        throw new \InvalidArgumentException("Can not saving data into database.", 10);
     }
 
     /**
      * Save transaction data in db when verify request send and return true if its work correctly.
+     *
      * @param $gate AbstractGate
+     *
+     * @throws \aminkt\payment\exceptions\SecurityException
+     *
      * @return bool
      */
-    public function saveVerifyTransactionModel($gate){
+    public function saveVerifyDataIntoDatabase($gate)
+    {
+        /**
+         * Throw an verify event. can be used in kernel to save and modify transactions.
+         */
+        $transactionSession = TransactionSession::findOne($gate->getOrderId());
+
+        /**
+         * Save transactions logs.
+         */
+        self::saveLogData($transactionSession, $gate, TransactionLog::STATUS_PAYMENT_VERIFY);
+
+        /**
+         * Check transaction correctness.
+         */
+        if ($transactionSession->status == TransactionSession::STATUS_PAID) {
+            throw new SecurityException("This transaction paid before.");
+            // or return false and track in verify method.
+            return false;
+        }
+
+        /**
+         * Update transactionSession data.
+         */
+        $transactionSession->userCardHash = $gate->getCardHash();
+        $transactionSession->userCardPan = $gate->getCardPan();
+        $transactionSession->trackingCode = $gate->getTrackingCode();
+        if ($gate->getStatus()) {
+            $transactionSession->status = TransactionSession::STATUS_PAID;
+        } else {
+            $transactionSession->status = TransactionSession::STATUS_FAILED;
+        }
+
+        if (!$transactionSession->save()) {
+            \Yii::error($transactionSession->getErrors(), self::className());
+            throw new RuntimeException('Can not save transaction session data.', 12);
+        } else {
+            /**
+             * Create an inquiry request for valid payments.
+             */
+            $inquiryRequest = new TransactionInquiry();
+            $inquiryRequest->sessionId = $transactionSession->id;
+            $inquiryRequest->status = TransactionInquiry::STATUS_INQUIRY_WAITING;
+            $inquiryRequest->save(false);
+        }
+
+        /**
+         * Throw an verify event. can be used in kernel to save and modify transactions.
+         */
         $event = new PaymentEvent();
-        $event->gate = $gate;
-        $event->time = time();
-        $gate->transactionModel()->trigger(Transaction::EVENT_VERIFY_TRANSACTION, $event);
+        $event->setGate($gate)
+            ->setStatus($gate->getStatus())
+            ->setTransactionSession($transactionSession);
+        $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_VERIFY, $event);
         return true;
     }
 
@@ -218,12 +336,48 @@ class Payment extends Component{
      * @param $gate AbstractGate
      * @return bool
      */
-    public function saveInquiryTransactionModel($gate){
+    public function saveInquiryDataIntoDatabase($gate)
+    {
+        /**
+         * Throw an verify event. can be used in kernel to save and modify transactions.
+         */
+        $transactionSession = TransactionSession::findOne($gate->getOrderId());
+
+        /**
+         * Save transactions logs.
+         */
+        self::saveLogData($transactionSession, $gate, TransactionLog::STATUS_PAYMENT_INQUIRY);
+
+        /**
+         * Throw an verify event. can be used in kernel to save and modify transactions.
+         */
         $event = new PaymentEvent();
-        $event->gate = $gate;
-        $event->time = time();
-        $gate->transactionModel()->trigger(Transaction::EVENT_INQUIRY_TRANSACTION, $event);
+        $event->setGate($gate)
+            ->setStatus($gate->getStatus())
+            ->setTransactionSession($transactionSession);
+        $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
         return true;
+    }
+
+    /**
+     * Save transactions logs.
+     *
+     * @param \aminkt\payment\models\TransactionSession $transactionSession
+     * @param \aminkt\payment\lib\AbstractGate $gate
+     * @param string $status
+     *
+     * @return void
+     */
+    public static function saveLogData($transactionSession, $gate, $status = TransactionLog::STATUS_UNKNOWN)
+    {
+        $log = new TransactionLog();
+        $log->sessionId = $transactionSession->id;
+        $log->bankDriver = $gate::className();
+        $log->status = $status;
+        $log->request = json_encode($gate->getRequest());
+        $log->response = json_encode($gate->getResponse());
+        $log->ip = \Yii::$app->getRequest()->getUserIP();
+        $log->save(false);
     }
 
 
@@ -264,8 +418,6 @@ class Payment extends Component{
     public static function validatePayment($paymentToken, $bankCode){
         if($bankCode){
             $bankName = self::decryptBankName($bankCode);
-            if($bankName == PayirGate::$gateId)
-                return $bankName;
 
             if(self::validatePaymentToken($paymentToken))
                 return $bankName;
@@ -294,7 +446,6 @@ class Payment extends Component{
      */
     public static function encryptBankName($bankName){
         return $bankName;
-        return \Yii::$app->getSecurity()->encryptByKey($bankName, Payment::getSecureKey());
     }
 
     /**
@@ -304,8 +455,6 @@ class Payment extends Component{
      */
     public static function decryptBankName($bankCode){
         return $bankCode;
-        $bankName = \Yii::$app->getSecurity()->decryptByKey($bankCode, Payment::getSecureKey());
-        return $bankName;
     }
 
     /**

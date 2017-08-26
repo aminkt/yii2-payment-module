@@ -92,8 +92,11 @@ abstract class AbstractGate extends Component
 
     /**
      * If for any reason you need check transaction status, this method ask again status of transaction from bank.
+     * >**note: This method may not implement in all bank gates.**
      *
-     * **note: This method may not implement in all bank gates.**
+     * @throws \aminkt\payment\exceptions\ConnectionException
+     * @throws \RuntimeException
+     *
      * @return bool
      */
     public function inquiryTransaction(){
@@ -167,6 +170,12 @@ abstract class AbstractGate extends Component
     public abstract function getResponse();
 
     /**
+     * Return status of pay request, verify or inquiry request.
+     * @return boolean
+     */
+    public abstract function getStatus();
+
+    /**
      * @param int $amount
      * @return $this
      */
@@ -180,11 +189,12 @@ abstract class AbstractGate extends Component
     }
 
     /**
+     * Return amount in IR Rial.
      * @return int
      */
     public function getAmount()
     {
-        return $this->amount;
+        return $this->amount * 10;
     }
 
     /**
@@ -197,10 +207,12 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $authority
+     * @return $this
      */
     public function setAuthority($authority)
     {
         $this->authority = $authority;
+        return $this;
     }
 
     /**
@@ -213,10 +225,12 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $trackingCode
+     * @return $this
      */
     public function setTrackingCode($trackingCode)
     {
         $this->trackingCode = $trackingCode;
+        return $this;
     }
 
     /**
@@ -229,10 +243,12 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $cardPan
+     * @return $this
      */
     public function setCardPan($cardPan)
     {
         $this->cardPan = $cardPan;
+        return $this;
     }
 
     /**
@@ -245,10 +261,12 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $cardHash
+     * @return $this
      */
     public function setCardHash($cardHash)
     {
         $this->cardHash = $cardHash;
+        return $this;
     }
 
 
@@ -262,10 +280,12 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $orderId
+     * @return $this
      */
     public function setOrderId($orderId)
     {
         $this->orderId = $orderId;
+        return $this;
     }
 
     /**
