@@ -26,8 +26,7 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        /** @var Payment $payment */
-        $payment = \Yii::$app->getModule('payment')->payment;
+        $payment = \aminkt\payment\Payment::getInstance()->payment;
         $payment->payRequest(100, time());
         return $this->render('index');
     }
@@ -53,8 +52,7 @@ class DefaultController extends Controller
      * Verify bank transaction.
      */
     public function actionVerify(){
-        /** @var Payment $payment */
-        $payment = \Yii::$app->getModule('payment')->payment;
+        $payment = \aminkt\payment\Payment::getInstance()->payment;
         $verify = $payment->verify();
         return $this->render('verify', [
             'verify'=>$verify,

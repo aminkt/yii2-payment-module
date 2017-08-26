@@ -75,6 +75,12 @@ abstract class AbstractGate extends Component
      *  ]
      * ]
      * </code>
+     * Or use below definition to redirection:
+     * <code>
+     * [
+     *      'redirect'=>'https://redirect.address
+     * ]
+     * </code>
      *
      * @return array
      */

@@ -3,7 +3,12 @@
 namespace aminkt\payment;
 
 /**
- * payment module definition class
+ * Payment module definition class
+ *
+ * @property \aminkt\payment\components\Payment $payment    Payment component.
+ *
+ * @author Amin Keshavarz <ak_1596@yahoo.com>
+ * @package aminkt\payment
  */
 class Payment extends \yii\base\Module
 {

@@ -4,6 +4,7 @@ namespace aminkt\payment\components;
 
 
 use aminkt\payment\lib\AbstractGate;
+use aminkt\payment\models\TransactionInquiry;
 use yii\base\Event;
 
 /**
@@ -15,6 +16,28 @@ class PaymentEvent extends Event
 {
     /** @var  boolean $status Payment status */
     public $status;
+
+    /** @var null|TransactionInquiry $transactionInquiry */
+    public $transactionInquiry = null;
+
+    /**
+     * @return TransactionInquiry|null
+     */
+    public function getTransactionInquiry()
+    {
+        return $this->transactionInquiry;
+    }
+
+    /**
+     * @param TransactionInquiry|null $transactionInquiry
+     *
+     * @return $this
+     */
+    public function setTransactionInquiry($transactionInquiry)
+    {
+        $this->transactionInquiry = $transactionInquiry;
+        return $this;
+    }
 
     /**
      * @return bool

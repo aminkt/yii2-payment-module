@@ -2,7 +2,6 @@
 
 namespace aminkt\payment\components;
 
-use aminkt\payment\components\PaymentEvent;
 use aminkt\payment\exceptions\ConnectionException;
 use aminkt\payment\exceptions\SecurityException;
 use aminkt\payment\exceptions\VerifyPaymentException;
@@ -16,7 +15,6 @@ use aminkt\payment\models\TransactionSession;
 use aminkt\userAccounting\exceptions\RuntimeException;
 use yii\base\Component;
 use yii\base\InvalidCallException;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\web\Cookie;
 
@@ -99,6 +97,7 @@ class Payment extends Component{
 
                     if($payRequest){
                         $data = self::$currentGateObject->redirectToBankFormData();
+                        \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
                         \Yii::$app->response->redirect(['/payment/default/send'])->send();
                         return $data;
                     }else
@@ -116,6 +115,7 @@ class Payment extends Component{
                     \Yii::error("Gate of " . $gate->getPSPName() . " has a hard error while trying to send payment request.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
+                    throw $exception;
                 }
             }
 
@@ -128,7 +128,10 @@ class Payment extends Component{
 
     /**
      * Verify request
-     * @return bool|AbstractGate
+     *
+     * @throws \Exception
+     *
+     * @return AbstractGate|bool
      */
     public function verify(){
         if(!self::isBlocked()){
@@ -149,15 +152,26 @@ class Payment extends Component{
                             return $verify;
                         }
                     } catch (VerifyPaymentException $exception) {
-
+                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " verify become failed.", self::className());
+                        \Yii::error($exception->getMessage(), self::className());
+                        \Yii::error($exception->getTrace(), self::className());
                     } catch (SecurityException $exception) {
-
+                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " have security error.", self::className());
+                        \Yii::error($exception->getMessage(), self::className());
+                        \Yii::error($exception->getTrace(), self::className());
                     } catch (ConnectionException $exception) {
-
+                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
+                        \Yii::error($exception->getMessage(), self::className());
+                        \Yii::error($exception->getTrace(), self::className());
                     } catch (\RuntimeException $exception) {
-
+                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in verify payment.", self::className());
+                        \Yii::error($exception->getMessage(), self::className());
+                        \Yii::error($exception->getTrace(), self::className());
                     } catch (\Exception $exception) {
-
+                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to verify payment request.", self::className());
+                        \Yii::error($exception->getMessage(), self::className());
+                        \Yii::error($exception->getTrace(), self::className());
+                        throw $exception;
                     }
                 } else {
                     static::addError("Security error when try to tracking payment.\nDefined PSP is not valid.", 111, true);
@@ -174,43 +188,46 @@ class Payment extends Component{
 
     /**
      * Inquiry request
-     * @param string $bank name of gate
-     * @param array $data
+     *
+     * @param TransactionInquiry $transactionInquiry
+     *
+     * @throws \Exception
+     *
      * @return null
      */
-    public function inquiry($bank, $data=[]){
-        if(!self::isBlocked()){
-            if (key_exists($bank, $this->gates)){
-                try {
-                    $gateConfig = $this->gates[$bank];
+    public function inquiry($transactionInquiry)
+    {
+        try {
+            $transactionSession = $transactionInquiry->transactionSession;
+            /** @var AbstractGate $gateObject */
+            $gateObject = new $transactionSession->psp();
+            $gateConfig = $this->gates[$gateObject::$gateId];
+            $gateObject->setIdentityData($gateConfig['identityData']);
 
-                    /** @var AbstractGate $gateObject */
-                    $gateObject = new $gateConfig['class']();
-                    $gateObject->setIdentityData($gateConfig['identityData']);
+            $gateObject->setOrderId($transactionSession->id)
+                ->setAuthority($transactionSession->authority)
+                ->setTrackingCode($transactionSession->trackingCode)
+                ->setAmount($transactionSession->amount);
 
-                    $gateObject->setOrderId(ArrayHelper::getValue($data, 'orderId'))
-                        ->setAuthority(ArrayHelper::getValue($data, 'authority'))
-                        ->setTrackingCode(ArrayHelper::getValue($data, 'trackingCode'))
-                        ->setAmount(ArrayHelper::getValue($data, 'amount', 0));
-
-                    self::$currentGateObject = $gateObject;
-                    $inquiry = self::$currentGateObject->inquiryTransaction();
-                    $this->saveInquiryDataIntoDatabase(self::$currentGateObject);
-                    if ($inquiry) {
-                        return $inquiry;
-                    }
-                } catch (ConnectionException $exception) {
-
-                } catch (\RuntimeException $exception) {
-
-                } catch (\Exception $exception) {
-
-                }
-            } else {
-                static::addError("Security error when try to tracking payment.\nDefined PSP is not valid.", 111, true);
+            self::$currentGateObject = $gateObject;
+            $inquiry = self::$currentGateObject->inquiryTransaction();
+            $this->saveInquiryDataIntoDatabase(self::$currentGateObject, $transactionInquiry);
+            if ($inquiry) {
+                return $inquiry;
             }
-        }else{
-            static::addError("User blocked and services is not available right now.", 112);
+        } catch (ConnectionException $exception) {
+            \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
+            \Yii::error($exception->getMessage(), self::className());
+            \Yii::error($exception->getTrace(), self::className());
+        } catch (\RuntimeException $exception) {
+            \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in inquiry payment.", self::className());
+            \Yii::error($exception->getMessage(), self::className());
+            \Yii::error($exception->getTrace(), self::className());
+        } catch (\Exception $exception) {
+            \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to inquiry payment request.", self::className());
+            \Yii::error($exception->getMessage(), self::className());
+            \Yii::error($exception->getTrace(), self::className());
+            throw $exception;
         }
         return false;
     }
@@ -333,20 +350,29 @@ class Payment extends Component{
 
     /**
      * Save transaction data in db when inquiry request send and return true if its work correctly.
-     * @param $gate AbstractGate
+     *
+     * @param AbstractGate $gate
+     * @param TransactionInquiry $inquiryModel
+     *
      * @return bool
      */
-    public function saveInquiryDataIntoDatabase($gate)
+    public function saveInquiryDataIntoDatabase($gate, $inquiryModel)
     {
-        /**
-         * Throw an verify event. can be used in kernel to save and modify transactions.
-         */
-        $transactionSession = TransactionSession::findOne($gate->getOrderId());
-
         /**
          * Save transactions logs.
          */
-        self::saveLogData($transactionSession, $gate, TransactionLog::STATUS_PAYMENT_INQUIRY);
+        self::saveLogData($inquiryModel->transactionSession, $gate, TransactionLog::STATUS_PAYMENT_INQUIRY);
+
+        if ($gate->getStatus()) {
+            $inquiryModel->status = TransactionInquiry::STATUS_INQUIRY_SUCCESS;
+        } else {
+            $inquiryModel->status = TransactionInquiry::STATUS_INQUIRY_FAILED;
+        }
+
+        if (!$inquiryModel->save()) {
+            \Yii::error($inquiryModel->getErrors(), self::className());
+            throw new RuntimeException('Can not save transaction inquiry data.', 12);
+        }
 
         /**
          * Throw an verify event. can be used in kernel to save and modify transactions.
@@ -354,7 +380,8 @@ class Payment extends Component{
         $event = new PaymentEvent();
         $event->setGate($gate)
             ->setStatus($gate->getStatus())
-            ->setTransactionSession($transactionSession);
+            ->setTransactionInquiry($inquiryModel)
+            ->setTransactionSession($inquiryModel->transactionSession);
         $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
         return true;
     }

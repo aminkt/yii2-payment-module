@@ -2,7 +2,6 @@
 
 namespace aminkt\payment\models;
 
-use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\db\Expression;
@@ -17,7 +16,7 @@ use yii\db\Expression;
  * @property string $updateAt
  * @property string $createAt
  *
- * @property TransactionSession $transactionSession
+ * @property \aminkt\payment\models\TransactionSession $transactionSession
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  */
