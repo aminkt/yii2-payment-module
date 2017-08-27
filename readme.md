@@ -54,7 +54,7 @@ Usage:
 In your code when you want create a payment request use below code:
 ```php
 $payment = \aminkt\payment\Payment::getInstance()->payment;
-$data = $payment->payRequest(100, time());
+$data = $payment->payRequest(100, $orderId);
 // $data is an array that hold a form information that you should send to bank gateway
 if(is_array($data) and array_key_exists('redirect', $data) and isset($data['redirect'])){
     return $this->redirect($data['redirect']);
@@ -64,6 +64,8 @@ if(is_array($data) and array_key_exists('redirect', $data) and isset($data['redi
     ]);
 }
 ```
+
+> Use `$orderId` to make a connection between your order table and payment data. by defining this you can access to your order later.
 
 When user paid money he will redirect in a page in you site that you defined.
 By default user will redirect to `/payment/default/verify` route.
@@ -96,4 +98,4 @@ In you backend panel you can use module routes to see various reports include Tr
 ---
 Structure of tables and classes:
 ---
-![Data base scheme](structure.png)
+![Data base scheme](structure.png){ width: 100%; }
