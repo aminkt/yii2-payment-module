@@ -10,180 +10,108 @@ class m170102_161634_init extends Migration
     public function safeUp()
     {
         $this->createTables();
-        $this->createIndexes();
         $this->addForeignKeys();
     }
 
     public function safeDown()
     {
         $this->removeForeignKeys();
-        $this->removeIndexes();
         $this->removeTables();
     }
 
-    private function createIndexes(){
-        // creates index for column `factorNumber`
-        $this->createIndex(
-            'idx-transaction-factorNumber',
-            '{{%transaction}}',
-            'factorNumber',
-            true
-        );
-
-        // creates index for column `transId`
-        $this->createIndex(
-            'idx-transaction-transId',
-            '{{%transaction}}',
-            'transId',
-            true
-        );
-
-        // creates index for column `transId`
-        $this->createIndex(
-            'idx-transaction_log-transId',
-            '{{%transaction_log}}',
-            'transId'
-        );
-    }
-
-    private function removeIndexes(){
-        // drop index for column `factorNumber`
-        $this->dropIndex(
-            'idx-transaction-factorNumber',
-            '{{%transaction}}'
-        );
-
-        // drop index for column `transId`
-        $this->dropIndex(
-            'idx-transaction-transId',
-            '{{%transaction}}'
-        );
-
-        // drop index for column `transId`
-        $this->dropIndex(
-            'idx-transaction_log-transId',
-            '{{%transaction_log}}'
-        );
-    }
 
     private function addForeignKeys(){
-        // add foreign key for table `transaction_data` and `transaction`
+
+        // add foreign key for table `inquiries` and `transaction_sessions`
         $this->addForeignKey(
-            'fk-transaction_data-transactionId',
-            '{{%transaction_data}}',
-            'transactionId',
-            '{{%transaction}}',
+            'fk-inquiries-sessionId',
+            '{{%transaction_inquiries}}',
+            'sessionId',
+            '{{%transaction_sessions}}',
             'id',
             'CASCADE',
             'CASCADE'
         );
 
-        // add foreign key for table `transaction_cardholder` and `transaction`
+        // add foreign key for table `transaction_log` and `transaction_sessions`
         $this->addForeignKey(
-            'fk-transaction_cardholder-transactionId',
-            '{{%transaction_cardholder}}',
-            'transactionId',
-            '{{%transaction}}',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
-
-        // add foreign key for table `transaction_log` and `transaction`
-        $this->addForeignKey(
-            'fk-transaction_log-transId',
+            'fk-transactionLog-sessionId',
             '{{%transaction_log}}',
-            'transId',
-            '{{%transaction}}',
-            'transId',
+            'sessionId',
+            '{{%transaction_sessions}}',
+            'id',
             'CASCADE',
             'CASCADE'
         );
     }
 
     private function removeForeignKeys(){
-        // remove foreign key for table `transaction_data` and `transaction`
+        // remove foreign key for table `inquiries` and `transaction_sessions`
         $this->dropForeignKey(
-            'fk-transaction_data-transactionId',
-            '{{%transaction_data}}'
+            'fk-inquiries-sessionId',
+            '{{%transaction_inquiries}}'
         );
 
-        // remove foreign key for table `transaction_cardholder` and `transaction`
+        // remove foreign key for table `transaction_log` and `transaction_sessions`
         $this->dropForeignKey(
-            'fk-transaction_cardholder-transactionId',
-            '{{%transaction_cardholder}}'
-        );
-
-        // remove foreign key for table `transaction_log` and `transaction`
-        $this->dropForeignKey(
-            'fk-transaction_log-transId',
+            'fk-transactionLog-sessionId',
             '{{%transaction_log}}'
         );
     }
 
     private function createTables(){
-        //Create transaction table.
-        $this->createTable('{{%transaction}}', [
+        // Store transaction sessions.
+        $this->createTable('{{%transaction_sessions}}', [
             'id'=>$this->primaryKey(),
-            'factorNumber'=>$this->string()->notNull(),
-            'transId'=>$this->string()->notNull(),
-            'price'=>$this->integer(10)->notNull(),
-            'transBankName'=>$this->string(),
-            'transTrackingCode'=>$this->string(),
-            'type'=>"tinyint(2) NOT NULL DEFAULT 1",
-            'status'=>"tinyint(2) NOT NULL DEFAULT 1",
-            'ip'=>$this->string(),
-            'payTime'=>$this->integer(20)->notNull(),
-            'createTime'=>$this->integer(20)->notNull(),
+            'orderId' => $this->integer()->notNull(),
+            'psp' => $this->string(),
+            'authority' => $this->string(),
+            'amount' => $this->double()->defaultValue(0),
+            'trackingCode' => $this->string(),
+            'description' => $this->text(),
+            'note' => $this->text(),
+            'status' => $this->smallInteger(1)->defaultValue(1),
+            'type' => $this->smallInteger(1)->defaultValue(1),
+            'userCardPan' => $this->string(),
+            'userCardHash' => $this->string(),
+            'userMobile' => $this->string(15),
+            'ip' => $this->string(25),
+            'updateAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
+            'createAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP',
+
         ]);
 
-        //Create transaction_data table to
-        $this->createTable('{{%transaction_data}}', [
-            'transactionId'=>$this->primaryKey(),
-            'request'=>$this->text(),
-            'response'=>$this->text(),
-            'responseStatus'=>"tinyint(2) NOT NULL DEFAULT 1",
-            'responseTime'=>$this->integer(20),
-            'inquiryResponse'=>$this->text(),
-            'inquiryStatus'=>"tinyint(2) NOT NULL DEFAULT 1",
-            'inquiryTime'=>$this->integer(20),
-        ]);
-
-        //Create transaction_cardholder table
-        $this->createTable('{{%transaction_cardholder}}', [
-            'transactionId'=>$this->primaryKey(),
-            'bankName'=>$this->string(64),
-            'cardNumber'=>$this->string(128),
-            'accountNumber'=>$this->string(128),
-            'accountOwner'=>$this->string(),
-            'tel'=>$this->string(64),
-            'createTime'=>$this->integer(20)
+        $this->createTable('{{%transaction_inquiries}}', [
+            'id' => $this->primaryKey(),
+            'sessionId' => $this->integer()->notNull(),
+            'status' => $this->smallInteger(1)->defaultValue(1),
+            'description' => $this->text(),
+            'updateAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
+            'createAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP',
         ]);
 
         //Create transaction_log table
         $this->createTable('{{%transaction_log}}', [
             'id'=>$this->primaryKey(),
-            'transId'=>$this->string()->notNull(),
-            'bank'=>$this->string(),
+            'sessionId' => $this->string()->notNull(),
+            'bankDriver' => $this->string(),
             'status'=>$this->string(),
             'request'=>$this->text(),
             'response'=>$this->text(),
             'responseCode'=>$this->text(),
             'description'=>$this->text(),
             'ip'=>$this->string(),
-            'time'=>$this->integer(20)
+            'time' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
         ]);
     }
 
     private function removeTables(){
         //Drop transaction table.
-        $this->dropTable('{{%transaction}}');
+        $this->dropTable('{{%transaction_sessions}}');
 
-        //Drop transaction_data table to
-        $this->dropTable('{{%transaction_data}}');
 
         //Drop transaction_cardholder table
-        $this->dropTable('{{%transaction_cardholder}}');
+        $this->dropTable('{{%transaction_inquiries}}');
 
         //Drop transaction_log table
         $this->dropTable('{{%transaction_log}}');

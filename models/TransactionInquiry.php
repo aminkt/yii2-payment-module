@@ -7,29 +7,24 @@ use yii\db\ActiveRecord;
 use yii\db\Expression;
 
 /**
- * This is the model class for table "{{%transaction_log}}".
+ * This is the model class for table "{{%transaction_inquiries}}".
  *
  * @property integer $id
- * @property string $sessionId
- * @property string $bankDriver
- * @property string $status
- * @property string $request
- * @property string $response
- * @property string $responseCode
+ * @property integer $sessionId
+ * @property integer $status
  * @property string $description
- * @property string $ip
- * @property string $time
+ * @property string $updateAt
+ * @property string $createAt
  *
- * @property TransactionSession $transactionSession
+ * @property \aminkt\payment\models\TransactionSession $transactionSession
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  */
-class TransactionLog extends ActiveRecord
+class TransactionInquiry extends ActiveRecord
 {
-    const STATUS_PAYMENT_REQ = "payment_request";
-    const STATUS_PAYMENT_VERIFY = "payment_verify";
-    const STATUS_PAYMENT_INQUIRY = "payment_inquiry";
-    const STATUS_UNKNOWN = "unknown";
+    const STATUS_INQUIRY_WAITING = 1;
+    const STATUS_INQUIRY_SUCCESS = 2;
+    const STATUS_INQUIRY_FAILED = 3;
 
     public function behaviors()
     {
@@ -37,8 +32,8 @@ class TransactionLog extends ActiveRecord
             [
                 'class' => TimestampBehavior::className(),
                 'attributes' => [
-                    ActiveRecord::EVENT_BEFORE_INSERT => ['time'],
-                    ActiveRecord::EVENT_BEFORE_UPDATE => ['time'],
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['updateAt', 'createAt'],
+                    ActiveRecord::EVENT_BEFORE_UPDATE => ['updateAt'],
                 ],
                 // if you're using datetime instead of UNIX timestamp:
                 'value' => new Expression('NOW()'),
@@ -51,7 +46,7 @@ class TransactionLog extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%transaction_log}}';
+        return '{{%transaction_inquiries}}';
     }
 
     /**
@@ -61,9 +56,9 @@ class TransactionLog extends ActiveRecord
     {
         return [
             [['sessionId'], 'required'],
-            [['request', 'response', 'responseCode', 'description'], 'string'],
-            [['time'], 'safe'],
-            [['sessionId', 'bankDriver', 'status', 'ip'], 'string', 'max' => 255],
+            [['sessionId', 'status'], 'integer'],
+            [['description'], 'string'],
+            [['updateAt', 'createAt'], 'safe'],
         ];
     }
 
@@ -75,14 +70,10 @@ class TransactionLog extends ActiveRecord
         return [
             'id' => 'ID',
             'sessionId' => 'Session ID',
-            'bankDriver' => 'Bank Driver',
             'status' => 'Status',
-            'request' => 'Request',
-            'response' => 'Response',
-            'responseCode' => 'Response Code',
             'description' => 'Description',
-            'ip' => 'Ip',
-            'time' => 'Time',
+            'updateAt' => 'Update At',
+            'createAt' => 'Create At',
         ];
     }
 

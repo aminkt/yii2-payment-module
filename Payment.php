@@ -3,14 +3,23 @@
 namespace aminkt\payment;
 
 /**
- * payment module definition class
+ * Payment module definition class
+ *
+ * @property \aminkt\payment\components\Payment $payment    Payment component.
+ *
+ * @author Amin Keshavarz <ak_1596@yahoo.com>
+ * @package aminkt\payment
  */
 class Payment extends \yii\base\Module
 {
+    const EVENT_PAYMENT_REQUEST = 'payment_req';
+    const EVENT_PAYMENT_VERIFY = 'payment_verify';
+    const EVENT_PAYMENT_INQUIRY = 'payment_inquiry';
+
     /**
      * @inheritdoc
      */
-    public $controllerNamespace = 'payment\controllers\frontend';
+    public $controllerNamespace = 'aminkt\payment\controllers\frontend';
 
     /**
      * @inheritdoc

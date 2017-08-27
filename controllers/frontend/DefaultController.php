@@ -2,7 +2,6 @@
 
 namespace aminkt\payment\controllers\frontend;
 
-use aminkt\payment\components\Payment;
 use yii\web\Controller;
 
 /**
@@ -26,8 +25,7 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        /** @var Payment $payment */
-        $payment = \Yii::$app->getModule('payment')->payment;
+        $payment = \aminkt\payment\Payment::getInstance()->payment;
         $payment->payRequest(100, time());
         return $this->render('index');
     }
@@ -37,10 +35,12 @@ class DefaultController extends Controller
      * @return string
      */
     public function actionSend(){
-        $data = \Yii::$app->getSession()->get(Payment::SESSION_NAME_OF_BANK_POST_DATA);
-        $data = json_decode($data, true);
-        if(array_key_exists('redirect', $data) and isset($data['redirect'])){
-            return $this->redirect($data->redirect);
+        $payment = \aminkt\payment\Payment::getInstance()->payment;
+        $data = $payment->payRequest(100, time());
+//        $data = \Yii::$app->getSession()->get(Payment::SESSION_NAME_OF_BANK_POST_DATA);
+//        $data = json_decode($data, true);
+        if (is_array($data) and array_key_exists('redirect', $data) and isset($data['redirect'])) {
+            return $this->redirect($data['redirect']);
         }else{
             return $this->render('send', [
                 'data'=>$data
@@ -53,8 +53,7 @@ class DefaultController extends Controller
      * Verify bank transaction.
      */
     public function actionVerify(){
-        /** @var Payment $payment */
-        $payment = \Yii::$app->getModule('payment')->payment;
+        $payment = \aminkt\payment\Payment::getInstance()->payment;
         $verify = $payment->verify();
         return $this->render('verify', [
             'verify'=>$verify,

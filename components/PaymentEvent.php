@@ -1,23 +1,110 @@
 <?php
-/**
- * Created by Amin Keshavarz
- * Date: 01/02/2017
- * Time: 04:47 PM
- * Created in telbit project
- */
 
-namespace aminkt\payment\modules\payment\components;
+namespace aminkt\payment\components;
 
 
 use aminkt\payment\lib\AbstractGate;
+use aminkt\payment\models\TransactionInquiry;
 use yii\base\Event;
 
+/**
+ * Class PaymentEvent
+ * @author Amin Keshavarz <ak_1596@yahoo.com>
+ * @package aminkt\payment\components
+ */
 class PaymentEvent extends Event
 {
+    /** @var  boolean $status Payment status */
+    public $status;
+
+    /** @var null|TransactionInquiry $transactionInquiry */
+    public $transactionInquiry = null;
+
+    /**
+     * @return TransactionInquiry|null
+     */
+    public function getTransactionInquiry()
+    {
+        return $this->transactionInquiry;
+    }
+
+    /**
+     * @param TransactionInquiry|null $transactionInquiry
+     *
+     * @return $this
+     */
+    public function setTransactionInquiry($transactionInquiry)
+    {
+        $this->transactionInquiry = $transactionInquiry;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param bool $status
+     * @return $this
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+        return $this;
+    }
+
     /** @var  AbstractGate $gate */
     public $gate;
 
     /** @var  integer $time */
     public $time;
 
+    /** @var  \aminkt\payment\models\TransactionSession $transactionSession */
+    public $transactionSession;
+
+    public function init()
+    {
+        parent::init();
+        $this->time = time();
+    }
+
+    /**
+     * @return AbstractGate
+     */
+    public function getGate()
+    {
+        return $this->gate;
+    }
+
+    /**
+     * @param AbstractGate $gate
+     * @return $this
+     */
+    public function setGate($gate)
+    {
+        $this->gate = $gate;
+        return $this;
+    }
+
+    /**
+     * @return \aminkt\payment\models\TransactionSession
+     */
+    public function getTransactionSession()
+    {
+        return $this->transactionSession;
+    }
+
+    /**
+     * @param \aminkt\payment\models\TransactionSession $transactionSession
+     * @return $this
+     */
+    public function setTransactionSession($transactionSession)
+    {
+        $this->transactionSession = $transactionSession;
+        return $this;
+    }
 }

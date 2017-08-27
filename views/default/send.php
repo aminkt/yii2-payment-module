@@ -28,12 +28,12 @@
 <?php if($data) : ?>
 <script>
     var form = document.createElement("form");
-    form.setAttribute("method", "POST");
-    form.setAttribute("action", "<?= $data['bankUrl'] ?>");
+    form.setAttribute("method", "<?= $data['method'] ?>");
+    form.setAttribute("action", "<?= $data['action'] ?>");
     form.setAttribute("target", "_self");
     var hiddenField;
-    <?php if (isset($data['post']) and count($data['post'])>0) : ?>
-        <?php foreach ($data['post'] as $key=>$value) : ?>
+    <?php if (isset($data['inputs']) and count($data['inputs']) > 0) : ?>
+    <?php foreach ($data['inputs'] as $key=>$value) : ?>
             hiddenField = document.createElement("input");
             hiddenField.setAttribute("name", "<?= $key ?>");
             hiddenField.setAttribute("value", "<?= $value ?>");

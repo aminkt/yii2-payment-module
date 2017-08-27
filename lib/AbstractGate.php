@@ -2,11 +2,9 @@
 
 namespace aminkt\payment\lib;
 
-use aminkt\payment\components\PaymentEvent;
 use aminkt\payment\components\Payment;
-use aminkt\payment\models\Transaction;
 use yii\base\Component;
-use yii\base\InvalidCallException;
+use yii\helpers\Inflector;
 
 /**
  * Class AbstractGate
@@ -14,56 +12,97 @@ use yii\base\InvalidCallException;
  */
 abstract class AbstractGate extends Component
 {
-    public $status;
-    public $cardHolder;
-    /** @var string  $factorNumber */
-    protected $factorNumber;
-    /** @var string  $transactionId */
-    protected $transactionId;
-    /** @var integer  $price */
-    protected $price;
-    /** @var string  $transTrackingCode */
-    protected $transTrackingCode;
-    /** @var string  $callbackUrl */
-    protected $callbackUrl;
-    /** @var array $identityData */
-    protected $identityData = [];
-    /** @var string  $transBankName */
-    public static $transBankName = 'Gate';
+    /** @var string $pspName */
+    public static $pspName = 'Gate';
 
     /** @var string $gateId */
     public static $gateId = 'G1';
 
-    /** @var  Transaction $_transactionModel */
-    protected $_transactionModel;
+    /** @var int Amount of transaction */
+    protected $amount = 0;
 
+    /** @var string  $callbackUrl */
+    protected $callbackUrl;
+
+    /** @var  string $orderId Order id */
+    protected $orderId;
+
+    /** @var  string $authority Payment authority */
+    protected $authority;
+
+    /** @var  string $trackingCode Payment tracking code */
+    protected $trackingCode;
+
+    /** @var  string $cardPan Payer card pan */
+    protected $cardPan;
+
+    /** @var  string $cardHash Payer card hash in sh2(uppercase($card)) */
+    protected $cardHash;
+
+    /** @var array $identityData */
+    protected $identityData = [];
+
+
+    /**
+     * Dispatch payment response from bank.
+     *
+     * @return boolean
+     */
+    public abstract function dispatchRequest();
 
     /**
      * Prepare data and config gate for payment.
-     * @return mixed
+     *
+     * @throws \aminkt\payment\exceptions\ConnectionException   Connection failed.
+     *
+     * @return array
+     * Return data to redirect user to bank.
      */
-    public function payRequest(){
-        return true;
-    }
+    public abstract function payRequest();
 
     /**
-     * Send user to bank page.
-     * @return boolean
+     * Return an array that can be used to redirect user to bank gate way.
+     *
+     * Return format is like this:
+     * <code>
+     * [
+     *  'action'=>'https://bank.shaparak.ir/payment
+     *  'method'=>"POST",
+     *  'inputs'=>[
+     *      'amount'=>100,
+     *      'merchant'=>123,
+     *      ...
+     *  ]
+     * ]
+     * </code>
+     * Or use below definition to redirection:
+     * <code>
+     * [
+     *      'redirect'=>'https://redirect.address
+     * ]
+     * </code>
+     *
+     * @return array
      */
-    public abstract function sendToBank();
+    public abstract function redirectToBankFormData();
 
     /**
      * Verify Transaction if its paid. this method should call in callback from bank.
+     *
+     * @throws \aminkt\payment\exceptions\VerifyPaymentException
+     * @throws \aminkt\payment\exceptions\ConnectionException
+     *
      * @return AbstractGate|boolean
      */
-    public function verifyTransaction(){
-        return true;
-    }
+    public abstract function verifyTransaction();
 
     /**
      * If for any reason you need check transaction status, this method ask again status of transaction from bank.
+     * >**note: This method may not implement in all bank gates.**
      *
-     * **note: This method may not implement in all bank gates.**
+     * @throws \aminkt\payment\exceptions\ConnectionException
+     * @throws \RuntimeException
+     *
      * @return bool
      */
     public function inquiryTransaction(){
@@ -71,186 +110,17 @@ abstract class AbstractGate extends Component
     }
 
     /**
-     * If your bank need your request to settle your money, this method send settle request to bank.
-     *
-     * **note: This method may not implement in all bank gates.**
-     * @return boolean
-     */
-    public function settleTransaction(){
-        return null;
-    }
-
-    /**
-     * If for any reason you want return money to customer and cancel transaction, this method reverse money to customer card.
-     *
-     * **note: This method may not implement in all bank gates.**
-     * @return boolean
-     */
-    public function reversalTransaction(){
-        return null;
-    }
-
-    /**
-     * Load gate data and return Transaction model of this gate.
-     * @return Transaction
-     */
-    public function load(){
-        try{
-            $condition = [];
-            if($this->transactionId){
-                $condition['transId']=$this->transactionId;
-            }elseif($this->factorNumber){
-                $condition['factorNumber']=$this->factorNumber;
-            }
-            $transaction = static::getTransaction($condition);
-            $this->_transactionModel = $transaction;
-            if(!$transaction)
-                return null;
-            $this->setFactorNumber($transaction->factorNumber);
-            $this->setTransactionId($transaction->transId);
-            $this->setPrice($transaction->price);
-            $this->setTransBankName($transaction->transBankName);
-            $this->setTransTrackingCode($transaction->transTrackingCode);
-            $this->setIdentityData($this->identityData);
-            return $transaction;
-        }catch (InvalidCallException $e){
-            Payment::addError("Loading transaction failed");
-            return null;
-        }
-    }
-
-
-    /**
-     * Create or update Transaction model
-     * @return Transaction
-     */
-    public function transactionModel(){
-        $transaction = $this->load();
-        if(!$transaction){
-            $transaction = new Transaction();
-            $transaction->factorNumber = (string) $this->getFactorNumber();
-            $transactionId = $this->getTransactionId();
-            if($transactionId)
-                $transaction->transId = (string)  $transactionId;
-            else
-                $transaction->transId = (string) $transaction->factorNumber;
-
-            $transaction->price = $this->getPrice();
-            $transaction->transBankName = $this->getTransBankName();
-            $transaction->transTrackingCode = $this->getTransTrackingCode();
-            $transaction->type = Transaction::TYPE_INTERNET_GATE;
-            $transaction->ip = \Yii::$app->getRequest()->getUserIP();
-        }
-        return $transaction;
-    }
-
-    /**
-     * By this static method you can all time load Transaction model.
-     * @param array $condition
-     * @return Transaction
-     */
-    public static function getTransaction($condition = []){
-        $transaction = Transaction::findOne($condition);
-        if($transaction)
-            return $transaction;
-
-        $condition = json_encode($condition);
-        throw new InvalidCallException("Transaction model not found for transId = $condition");
-    }
-
-
-    /**
+     * Return string system provider name.
      * @return string
      */
-    public function getFactorNumber()
+    public function getPSPName()
     {
-        return $this->factorNumber;
+        return static::$pspName;
     }
 
-    /**
-     * @param string $factorNumber
-     * @return $this
-     */
-    public function setFactorNumber($factorNumber)
-    {
-        $this->factorNumber = $factorNumber;
-        return $this;
-    }
 
     /**
-     * @return string
-     */
-    public function getTransactionId()
-    {
-        return $this->transactionId;
-    }
-
-    /**
-     * @param string $transactionId
-     * @return $this
-     */
-    public function setTransactionId($transactionId)
-    {
-        $this->transactionId = $transactionId;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPrice()
-    {
-
-        return $this->price*10;
-    }
-
-    /**
-     * @param int $price
-     * @return $this
-     */
-    public function setPrice($price)
-    {
-        $this->price = $price;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTransBankName()
-    {
-        return static::$transBankName;
-    }
-
-    /**
-     * @param string $transBankName
-     * @return $this
-     */
-    public function setTransBankName($transBankName)
-    {
-        static::$transBankName = $transBankName;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTransTrackingCode()
-    {
-        return $this->transTrackingCode;
-    }
-
-    /**
-     * @param string $transTrackingCode
-     * @return $this
-     */
-    public function setTransTrackingCode($transTrackingCode)
-    {
-        $this->transTrackingCode = $transTrackingCode;
-        return $this;
-    }
-
-    /**
+     * Get callback url.
      * @return string
      */
     public function getCallbackUrl()
@@ -268,18 +138,14 @@ abstract class AbstractGate extends Component
         $token = Payment::generatePaymentToken();
         $callbackUrl['bc']=$bank;
         $callbackUrl['token']=$token;
-//        $getData = [
-//            'bc'=>$bank,
-//            'token'=>$token,
-//        ];
-//        $callbackUrl = array_merge($callbackUrl, $getData);
         $this->callbackUrl = \Yii::$app->getUrlManager()->createAbsoluteUrl($callbackUrl);
         return $this;
     }
 
     /**
+     * Return identity data.
      * @param $item
-     * @return array
+     * @return mixed
      */
     public function getIdentityData($item)
     {
@@ -287,6 +153,7 @@ abstract class AbstractGate extends Component
     }
 
     /**
+     * Set identity data.
      * @param array $identityData
      * @return $this
      */
@@ -309,8 +176,140 @@ abstract class AbstractGate extends Component
     public abstract function getResponse();
 
     /**
-     * Return Response code of bank
+     * Return status of pay request, verify or inquiry request.
+     * @return boolean
+     */
+    public abstract function getStatus();
+
+    /**
+     * @param int $amount
+     * @return $this
+     */
+    public function setAmount($amount)
+    {
+        if (is_int($amount) or is_float($amount) or is_double($amount) and $amount > 100)
+            $this->amount = $amount;
+        else
+            throw new \InvalidArgumentException("Amount should be a numeric value and be grater than 100 in IR Toman");
+        return $this;
+    }
+
+    /**
+     * Return amount in IR Rial.
+     * @return int
+     */
+    public function getAmount()
+    {
+        return $this->amount * 10;
+    }
+
+    /**
      * @return string
      */
-    public abstract function getResponseCode();
+    public function getAuthority()
+    {
+        return $this->authority;
+    }
+
+    /**
+     * @param string $authority
+     * @return $this
+     */
+    public function setAuthority($authority)
+    {
+        $this->authority = $authority;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTrackingCode()
+    {
+        return $this->trackingCode;
+    }
+
+    /**
+     * @param string $trackingCode
+     * @return $this
+     */
+    public function setTrackingCode($trackingCode)
+    {
+        $this->trackingCode = $trackingCode;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardPan()
+    {
+        return $this->cardPan;
+    }
+
+    /**
+     * @param string $cardPan
+     * @return $this
+     */
+    public function setCardPan($cardPan)
+    {
+        $this->cardPan = $cardPan;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardHash()
+    {
+        return $this->cardHash;
+    }
+
+    /**
+     * @param string $cardHash
+     * @return $this
+     */
+    public function setCardHash($cardHash)
+    {
+        $this->cardHash = $cardHash;
+        return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getOrderId()
+    {
+        return $this->orderId;
+    }
+
+    /**
+     * @param string $orderId
+     * @return $this
+     */
+    public function setOrderId($orderId)
+    {
+        $this->orderId = $orderId;
+        return $this;
+    }
+
+    /**
+     * Magic method to handle some method that not implemented.
+     *
+     * @param string $name
+     * @param array $params
+     *
+     * @return mixed
+     */
+    public function __call($name, $params)
+    {
+        if (method_exists($this, $name)) {
+            return call_user_func_array([$this, $name], $params);
+        } elseif (preg_match("/getIdentity(\w+)/", $name, $matches)) {
+            return $this->getIdentityData(Inflector::variablize($matches[1]));
+        }
+        return parent::__call($name, $params);
+    }
+
 }
