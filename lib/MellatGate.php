@@ -2,7 +2,6 @@
 
 namespace aminkt\payment\lib;
 
-use aminkt\payment\components\Payment;
 use aminkt\payment\exceptions\ConnectionException;
 use aminkt\payment\exceptions\VerifyPaymentException;
 use SoapClient;
@@ -64,6 +63,8 @@ class MellatGate extends AbstractGate
             return true;
         }catch (SoapFault $fault){
             throw $fault;
+        } catch (\ErrorException $e) {
+            throw new \Exception($e->getMessage(), $e->getCode(), $e);
         }catch (\Exception $e){
             throw $e;
         }

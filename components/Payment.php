@@ -47,6 +47,7 @@ class Payment extends Component{
     const SESSION_NAME_OF_BANK_POST_DATA = 'bank_post_data';
     const COOKIE_PAYMENT_BLOCKED = "payment_block_service";
     const COOKIE_PAYMENT_MUCH_ERROR = "payment_much_errors";
+    const CACHE_LOC_VERIFY_PROCESS = "verify_process_locking";
 
 
     public function init()
@@ -80,7 +81,9 @@ class Payment extends Component{
      * @param string $orderId
      * @param string $description
      *
-     * @return boolean|array    Return an array that represent data to redirect user to bank gateway.
+     * @throws \Exception
+     *
+     * @return array|bool Return an array that represent data to redirect user to bank gateway.
      */
     public function payRequest($amount, $orderId, $description = null)
     {
@@ -146,31 +149,43 @@ class Payment extends Component{
                         $gateObject->setIdentityData($gateConfig['identityData']);
                         self::$currentGateObject = $gateObject;
 
+                        while (\Yii::$app->getCache()->exists(self::CACHE_LOC_VERIFY_PROCESS)) {
+                            // Wait for running verify request.
+                        }
+
+                        \Yii::$app->getCache()->set(self::CACHE_LOC_VERIFY_PROCESS, true);
                         $verify = self::$currentGateObject->verifyTransaction();
                         $this->saveVerifyDataIntoDatabase(self::$currentGateObject);
                         if ($verify) {
+                            \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                             return $verify;
                         }
+                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                     } catch (VerifyPaymentException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " verify become failed.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
+                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                     } catch (SecurityException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " have security error.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
+                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                     } catch (ConnectionException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
+                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                     } catch (\RuntimeException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in verify payment.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
+                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                     } catch (\Exception $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to verify payment request.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
+                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
                         throw $exception;
                     }
                 } else {
