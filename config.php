@@ -8,9 +8,9 @@ return [
                 \aminkt\payment\lib\MellatGate::$gateId => [
                     'class' => \aminkt\payment\lib\MellatGate::className(),
                     'identityData'=>[
-                        'terminalId'=>'2149425',
-                        'userName'=>'telbit85',
-                        'password'=> '18993044',
+                        'terminalId' => '***',
+                        'userName' => '***',
+                        'password' => '***',
                         'payerId'=>0,
                         'webService'=>'https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl',
                         'bankGatewayAddress'=>'https://bpm.shaparak.ir/pgwchannel/startpay.mellat',
