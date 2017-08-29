@@ -17,6 +17,7 @@ use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\helpers\Html;
 use yii\web\Cookie;
+use yii\web\NotFoundHttpException;
 
 /**
  * Class Payment
@@ -149,43 +150,62 @@ class Payment extends Component{
                         $gateObject->setIdentityData($gateConfig['identityData']);
                         self::$currentGateObject = $gateObject;
 
-                        while (\Yii::$app->getCache()->exists(self::CACHE_LOC_VERIFY_PROCESS)) {
+                        self::$currentGateObject->dispatchRequest();
+                        $session = TransactionSession::findOne(['authority' => self::$currentGateObject->getAuthority()]);
+                        if (!$session) {
+                            throw new NotFoundHttpException("Session not found.");
+                        }
+                        self::$currentGateObject->setAmount($session->amount)
+                            ->setOrderId($session->id);
+
+                        $locVerifyCacheName = self::CACHE_LOC_VERIFY_PROCESS . '.' . self::$currentGateObject->getOrderId();
+                        while (\Yii::$app->getCache()->exists($locVerifyCacheName)) {
                             // Wait for running verify request.
                         }
 
-                        \Yii::$app->getCache()->set(self::CACHE_LOC_VERIFY_PROCESS, true);
+                        \Yii::$app->getCache()->set($locVerifyCacheName, true);
                         $verify = self::$currentGateObject->verifyTransaction();
                         $this->saveVerifyDataIntoDatabase(self::$currentGateObject);
                         if ($verify) {
-                            \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                            \Yii::$app->getCache()->delete($locVerifyCacheName);
                             return $verify;
                         }
-                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                        \Yii::$app->getCache()->delete($locVerifyCacheName);
+                    } catch (NotFoundHttpException $exception) {
+                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " verify become failed.", self::className());
+                        \Yii::error($exception->getMessage(), self::className());
+                        \Yii::error($exception->getTrace(), self::className());
+                        throw $exception;
                     } catch (VerifyPaymentException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " verify become failed.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
-                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                        if (isset($locVerifyCacheName))
+                            \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (SecurityException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " have security error.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
-                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                        if (isset($locVerifyCacheName))
+                            \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (ConnectionException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
-                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                        if (isset($locVerifyCacheName))
+                            \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\RuntimeException $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in verify payment.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
-                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                        if (isset($locVerifyCacheName))
+                            \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\Exception $exception) {
                         \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to verify payment request.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
-                        \Yii::$app->getCache()->delete(self::CACHE_LOC_VERIFY_PROCESS);
+                        if (isset($locVerifyCacheName))
+                            \Yii::$app->getCache()->delete($locVerifyCacheName);
                         throw $exception;
                     }
                 } else {

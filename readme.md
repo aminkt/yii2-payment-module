@@ -36,6 +36,24 @@ Step4: Add flowing lines in your application frontend config:
 'payment' => [
     'class' => 'aminkt\payment\Payment',
     'controllerNamespace' => 'aminkt\payment\controllers\frontend',
+    // Add this part to add your own gates.
+    'paymentComponentConfiguration'=>[
+         'class' => 'aminkt\payment\components\Payment',
+         'callbackUr'=>['/payment/default/verify'],
+         'gates'=>[
+             \aminkt\payment\lib\MellatGate::$gateId => [
+                 'class' => \aminkt\payment\lib\MellatGate::className(),
+                 'identityData'=>[
+                     'terminalId'=>'****',
+                     'userName'=>'****',
+                     'password'=> '****',
+                     'payerId'=>0,
+                     'webService'=>'https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl',
+                     'bankGatewayAddress'=>'https://bpm.shaparak.ir/pgwchannel/startpay.mellat',
+                 ]
+             ],
+             ...
+    ],
 ],
 ```
 

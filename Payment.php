@@ -16,6 +16,7 @@ class Payment extends \yii\base\Module
     const EVENT_PAYMENT_VERIFY = 'payment_verify';
     const EVENT_PAYMENT_INQUIRY = 'payment_inquiry';
 
+    public $paymentComponentConfiguration;
     /**
      * @inheritdoc
      */
@@ -28,6 +29,10 @@ class Payment extends \yii\base\Module
     {
         parent::init();
         // initialize the module with the configuration loaded from config.php
-        \Yii::configure($this, require(__DIR__ . '/config.php'));
+        $config = require(__DIR__ . '/config.php');
+        if ($this->paymentComponentConfiguration) {
+            $config['components']['payment'] = $this->paymentComponentConfiguration;
+        }
+        \Yii::configure($this, $config);
     }
 }
