@@ -23,7 +23,7 @@ Composer update aminkt/yii2-payment-module
 
 Step3: Add flowing lines in your application backend config:
 
-```
+```php
 'payment' => [
     'class' => 'aminkt\payment\Payment',
     'controllerNamespace' => 'aminkt\payment\controllers\backend',
@@ -32,7 +32,7 @@ Step3: Add flowing lines in your application backend config:
 
 Step4: Add flowing lines in your application frontend config:
 
-```
+```php
 'payment' => [
     'class' => 'aminkt\payment\Payment',
     'controllerNamespace' => 'aminkt\payment\controllers\frontend',
