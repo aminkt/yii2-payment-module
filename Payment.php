@@ -35,4 +35,12 @@ class Payment extends \yii\base\Module
         }
         \Yii::configure($this, $config);
     }
+
+    public static function getInstance()
+    {
+        if (parent::getInstance())
+            return parent::getInstance();
+
+        return \Yii::$app->getModule('payment');
+    }
 }
