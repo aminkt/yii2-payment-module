@@ -1,6 +1,6 @@
 <?php
 /** @var $this \yii\web\View */
-/** @var $verify boolean|\payment\lib\AbstractGate */
+/** @var $verify boolean|aminkt\payment\lib\AbstractGate */
 
 $this->title = "نتیجه تراکنش - تل بیت";
 ?>
@@ -17,7 +17,7 @@ $this->title = "نتیجه تراکنش - تل بیت";
         </p>
     <?php else: ?>
         <p>
-            <?php foreach (\payment\components\Payment::getErrors() as $error) : ?>
+            <?php foreach (\aminkt\payment\components\Payment::getErrors() as $error) : ?>
                 <?= $error['code'] ?> : <?= $error['message'] ?>
                 <br>
             <?php endforeach; ?>
@@ -26,6 +26,6 @@ $this->title = "نتیجه تراکنش - تل بیت";
 
     <br>    <br>    <br>    <br>
     <p>
-        <?= \payment\components\Payment::decryptBankName(Yii::$app->request->get('bc')) ?>
+        <?= \aminkt\payment\components\Payment::decryptBankName(Yii::$app->request->get('bc')) ?>
     </p>
 </div>
