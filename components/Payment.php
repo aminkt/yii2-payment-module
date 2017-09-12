@@ -78,13 +78,27 @@ class Payment extends Component{
     /**
      * Send pay request to bank
      *
+     * Return false if request become failed or Return an array that can be used to redirect user to bank gate way.
+     *
+     * Return format is like this:
+     *
+     * [
+     *     'action'=>'https://bank.shaparak.ir/payment
+     *     'method'=>"POST",
+     *     'inputs'=>[
+     *         'amount'=>100,
+     *         'merchant'=>123,
+     *         ...
+     *     ]
+     * ]
+     *
      * @param integer $amount Amount in IR TOMAN.
      * @param string $orderId
      * @param string $description
      *
      * @throws \Exception
      *
-     * @return array|bool Return an array that represent data to redirect user to bank gateway.
+     * @return array|bool Return false if request become failed or Return an array that can be used to redirect user to bank gate way.
      */
     public function payRequest($amount, $orderId, $description = null)
     {
