@@ -93,7 +93,7 @@ class m170102_161634_init extends Migration
         //Create transaction_log table
         $this->createTable('{{%transaction_log}}', [
             'id'=>$this->primaryKey(),
-            'sessionId' => $this->string()->notNull(),
+            'sessionId' => $this->integer()->notNull(),
             'bankDriver' => $this->string(),
             'status'=>$this->string(),
             'request'=>$this->text(),
