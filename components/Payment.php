@@ -6,9 +6,6 @@ use aminkt\payment\exceptions\ConnectionException;
 use aminkt\payment\exceptions\SecurityException;
 use aminkt\payment\exceptions\VerifyPaymentException;
 use aminkt\payment\lib\AbstractGate;
-use aminkt\payment\lib\PayirGate;
-use aminkt\payment\models\Transaction;
-use aminkt\payment\models\TransactionData;
 use aminkt\payment\models\TransactionInquiry;
 use aminkt\payment\models\TransactionLog;
 use aminkt\payment\models\TransactionSession;
@@ -108,11 +105,9 @@ class Payment extends Component{
                     self::$currentGateObject = $gate;
                     self::$currentGateObject->setAmount($amount)
                         ->setCallbackUrl($this->callbackUr);
-                    $payRequest = self::$currentGateObject->payRequest();
-
                     $sessionId = $this->savePaymentDataIntoDatabase(self::$currentGateObject, $orderId, $description);
                     self::$currentGateObject->setOrderId($sessionId);
-
+                    $payRequest = self::$currentGateObject->payRequest();
                     if($payRequest){
                         $data = self::$currentGateObject->redirectToBankFormData();
                         \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
