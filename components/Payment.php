@@ -26,7 +26,10 @@ class Payment extends Component{
     public $gates;
 
     /** @var array $callbackUrl array for show router of callback */
-    public $callbackUr = ['/payment/default/verify'];
+    public $callback = ['/payment/default/verify'];
+
+    /** @var array send to bank page array for show router of callback */
+    public $sendPage = ['/payment/default/send'];
 
     /** @var AbstractGate[] $gatesObjects */
     protected static $gatesObjects = [];
@@ -111,7 +114,8 @@ class Payment extends Component{
                     if($payRequest){
                         $data = self::$currentGateObject->redirectToBankFormData();
                         \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
-                        \Yii::$app->response->redirect(['/payment/default/send'])->send();
+                        if ($this->sendPage)
+                            \Yii::$app->response->redirect($this->sendPage)->send();
                         return $data;
                     }else
                         throw new \RuntimeException();
