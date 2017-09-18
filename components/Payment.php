@@ -107,7 +107,7 @@ class Payment extends Component{
                 try{
                     self::$currentGateObject = $gate;
                     self::$currentGateObject->setAmount($amount)
-                        ->setCallbackUrl($this->callbackUr);
+                        ->setCallbackUrl($this->callback);
                     $sessionId = $this->savePaymentDataIntoDatabase(self::$currentGateObject, $orderId, $description);
                     self::$currentGateObject->setOrderId($sessionId);
                     $payRequest = self::$currentGateObject->payRequest();
