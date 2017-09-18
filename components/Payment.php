@@ -121,11 +121,11 @@ class Payment extends Component{
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                 } catch (\RuntimeException $exception) {
-                    \Yii::error("Gate of " . $gate->getPSPName() . " has problem in payment request.", self::className());
+                    \Yii::error("Gate of " . self::$currentGateObject->getPSPName() . " has problem in payment request.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                 } catch (\Exception $exception) {
-                    \Yii::error("Gate of " . $gate->getPSPName() . " has a hard error while trying to send payment request.", self::className());
+                    \Yii::error("Gate of " . self::$currentGateObject->getPSPName() . " has a hard error while trying to send payment request.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                     throw $exception;
