@@ -10,6 +10,7 @@ use aminkt\payment\models\TransactionInquiry;
 use aminkt\payment\models\TransactionLog;
 use aminkt\payment\models\TransactionSession;
 use aminkt\userAccounting\exceptions\RuntimeException;
+use common\exceptions\InvalidAmountException;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\helpers\Html;
@@ -109,9 +110,13 @@ class Payment extends Component{
                     self::$currentGateObject->setAmount($amount)
                         ->setCallbackUrl($this->callback);
                     $sessionId = $this->savePaymentDataIntoDatabase(self::$currentGateObject, $orderId, $description);
+                    if (!$sessionId) {
+                        throw new \RuntimeException("Can not save data into database.");
+                    }
                     self::$currentGateObject->setOrderId($sessionId);
                     $payRequest = self::$currentGateObject->payRequest();
                     if($payRequest){
+                        $this->updatePaymentDataInDatabase($sessionId, 'authority', self::$currentGateObject->getAuthority());
                         $data = self::$currentGateObject->redirectToBankFormData();
                         \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
                         if ($this->sendPage)
@@ -331,6 +336,33 @@ class Payment extends Component{
 
         \Yii::error($transactionSession->getErrors(), self::className());
         throw new \InvalidArgumentException("Can not saving data into database.", 10);
+    }
+
+    /**
+     * Update transaction session data.
+     *
+     * @param $sessionId
+     * @param $col
+     * @param $value
+     *
+     * @return bool
+     *
+     * @throws NotFoundHttpException
+     */
+    private function updatePaymentDataInDatabase($sessionId, $col, $value)
+    {
+        $transactionSession = TransactionSession::findOne($sessionId);
+        if (!$transactionSession)
+            throw new NotFoundHttpException("Transaction not found.");
+
+        $transactionSession->$col = $value;
+
+        if ($transactionSession->save()) {
+            return true;
+        }
+
+        \Yii::error($transactionSession->getErrors(), self::className());
+        throw new InvalidAmountException("Cant save data into database.");
     }
 
     /**
