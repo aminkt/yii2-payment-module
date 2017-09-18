@@ -117,7 +117,7 @@ class Payment extends Component{
                         throw new \RuntimeException();
 
                 } catch (ConnectionException $exception) {
-                    \Yii::error("Gate of " . $gate->getPSPName() . " not available now.", self::className());
+                    \Yii::error("Gate of " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                 } catch (\RuntimeException $exception) {
