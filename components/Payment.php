@@ -164,6 +164,9 @@ class Payment extends Component{
                         if (!$session) {
                             throw new NotFoundHttpException("Session not found.");
                         }
+                        if ($session->status == $session::STATUS_PAID) {
+                            throw new SecurityException("This order paid before.");
+                        }
                         self::$currentGateObject->setAmount($session->amount)
                             ->setOrderId($session->id);
 

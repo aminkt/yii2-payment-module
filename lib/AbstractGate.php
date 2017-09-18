@@ -281,6 +281,8 @@ abstract class AbstractGate extends Component
      */
     public function getOrderId()
     {
+        if (YII_ENV_DEV)
+            return $this->orderId . '_test';
         return $this->orderId;
     }
 
