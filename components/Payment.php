@@ -329,7 +329,7 @@ class Payment extends Component{
             $event->setGate($gate)
                 ->setStatus($gate->getStatus())
                 ->setTransactionSession($transactionSession);
-            $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_REQUEST, $event);
+            \Yii::$app->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_REQUEST, $event);
 
             return $transactionSession->id;
         }
@@ -427,7 +427,7 @@ class Payment extends Component{
         $event->setGate($gate)
             ->setStatus($gate->getStatus())
             ->setTransactionSession($transactionSession);
-        $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_VERIFY, $event);
+        \Yii::$app->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_VERIFY, $event);
         return true;
     }
 
