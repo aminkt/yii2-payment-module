@@ -465,7 +465,7 @@ class Payment extends Component{
             ->setStatus($gate->getStatus())
             ->setTransactionInquiry($inquiryModel)
             ->setTransactionSession($inquiryModel->transactionSession);
-        $this->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
+        \Yii::$app->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
         return true;
     }
 
