@@ -37,6 +37,7 @@ class MellatGate extends AbstractGate
     public function dispatchRequest()
     {
         $this->statusCode = $_POST['ResCode'] == '0';
+        $this->setOrderId($_POST['SaleOrderId']);
         if (isset($_POST['ResCode']) && $_POST['ResCode'] == '0' && !empty($_POST['RefId'])) {
             $this->setAuthority($_POST['RefId']);
             if (!empty($_POST['CardHolderPan'])) {

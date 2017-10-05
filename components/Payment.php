@@ -170,18 +170,18 @@ class Payment extends Component{
                         self::$currentGateObject = $gateObject;
 
                         self::$currentGateObject->dispatchRequest();
-                        $session = TransactionSession::findOne(['authority' => self::$currentGateObject->getAuthority()]);
+
+                        $session = TransactionSession::findOne(self::$currentGateObject->getOrderId(false));
                         if (!$session) {
                             throw new NotFoundHttpException("Session not found.");
                         }
                         if ($session->status == $session::STATUS_PAID) {
                             throw new SecurityException("This order paid before.");
                         }
-                        self::$currentGateObject->setAmount($session->amount)
-                            ->setOrderId($session->id);
+                        self::$currentGateObject->setAmount($session->amount);
 
-                        $locVerifyCacheName = self::CACHE_LOC_VERIFY_PROCESS . '.' . self::$currentGateObject->getOrderId();
-                        while (\Yii::$app->getCache()->exists($locVerifyCacheName)) {
+                        $locVerifyCacheName = self::CACHE_LOC_VERIFY_PROCESS . '.' . self::$currentGateObject->getOrderId(false);
+                        while (\Yii::$app->getCache()->exists($locVerifyCacheName) and !YII_ENV_DEV) {
                             // Wait for running verify request.
                         }
 
@@ -539,6 +539,9 @@ class Payment extends Component{
      * @return bool
      */
     public static function validatePaymentToken($paymentToken){
+        if (YII_ENV_DEV)
+            return true;
+
         $token = \Yii::$app->getSession()->get(self::SESSION_NAME_OF_TOKEN);
         $token = trim($token);
         $paymentToken = trim($paymentToken);
@@ -630,6 +633,9 @@ class Payment extends Component{
      * Increment counter of block.
      */
     public static function incrementBlockCounter(){
+        if (YII_ENV_DEV)
+            return;
+
         $cookiesResponse = \Yii::$app->response->cookies;
         $cookiesRequest = \Yii::$app->request->cookies;
         $counter = $cookiesRequest->getValue(static::COOKIE_PAYMENT_MUCH_ERROR, 0);

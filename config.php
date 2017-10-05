@@ -11,7 +11,7 @@ return [
                         'MID' => '******',
                         'password' => '******',
                         'bankGatewayAddress' => 'https://sep.shaparak.ir/payment.aspx',
-                        'webService' => 'https://sep.shaparak.ir/payments/referencepayment.asmx',
+                        'webService' => "https://sep.shaparak.ir/payments/referencepayment.asmx?WSDL",
                     ]
                 ],
                 \aminkt\payment\lib\MellatGate::$gateId => [

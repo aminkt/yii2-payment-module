@@ -97,7 +97,7 @@ class Sep extends AbstractGate
                 'refNum' => $this->getAuthority(),
                 'MID' => $this->getIdentityData('MID')
             ]);
-            $this->response = $this->soapProxy->VerifyTransaction($this->getAuthority(), $this->getIdentityData('MID'));
+            $this->response = $this->soapProxy->verifyTransaction($this->getAuthority(), $this->getIdentityData('MID'));
 
             if ($this->response > 0 and $this->response == $this->getAmount()) {
                 return $this;
@@ -144,13 +144,12 @@ class Sep extends AbstractGate
     private function connectToWebService()
     {
         try {
-            $soapClient = new soapclient($this->identityData['webService'], 'wsdl');
-            $soapClient->debug_flag = true;
-            $this->soapProxy = $soapClient->getProxy();
-            if ($err = $soapClient->getError()) {
-                throw new ConnectionException($err);
-            }
-            \Yii::warning($soapClient->debug_str, self::className());
+            \Yii::error($this->getIdentityData('webService'));
+            $this->soapProxy = new SoapClient($this->getIdentityWebService() . '?WSDL', [
+                'encoding' => 'UTF-8',
+                'connection_timeout' => 20,
+                'cache_wsdl' => WSDL_CACHE_NONE
+            ]);
             return true;
         } catch (SoapFault $fault) {
             throw $fault;
