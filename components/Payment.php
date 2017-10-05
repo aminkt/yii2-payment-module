@@ -116,7 +116,8 @@ class Payment extends Component{
                     self::$currentGateObject->setOrderId($sessionId);
                     $payRequest = self::$currentGateObject->payRequest();
                     if($payRequest){
-                        $this->updatePaymentDataInDatabase($sessionId, 'authority', self::$currentGateObject->getAuthority());
+                        if (self::$currentGateObject->getAuthority())
+                            $this->updatePaymentDataInDatabase($sessionId, 'authority', self::$currentGateObject->getAuthority());
                         $data = self::$currentGateObject->redirectToBankFormData();
                         \Yii::$app->getSession()->set(self::SESSION_NAME_OF_BANK_POST_DATA, json_encode($data));
                         if ($this->sendPage)
@@ -126,15 +127,15 @@ class Payment extends Component{
                         throw new \RuntimeException();
 
                 } catch (ConnectionException $exception) {
-                    \Yii::error("Gate of " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
+                    \Yii::error("Gate not available now.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                 } catch (\RuntimeException $exception) {
-                    \Yii::error("Gate of " . self::$currentGateObject->getPSPName() . " has problem in payment request.", self::className());
+                    \Yii::error("Gate has problem in payment request.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                 } catch (\Exception $exception) {
-                    \Yii::error("Gate of " . self::$currentGateObject->getPSPName() . " has a hard error while trying to send payment request.", self::className());
+                    \Yii::error("Gate has a hard error while trying to send payment request.", self::className());
                     \Yii::error($exception->getMessage(), self::className());
                     \Yii::error($exception->getTrace(), self::className());
                     throw $exception;
@@ -193,36 +194,36 @@ class Payment extends Component{
                         }
                         \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (NotFoundHttpException $exception) {
-                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " verify become failed.", self::className());
+                        \Yii::error("Gate verify become failed.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
                         throw $exception;
                     } catch (VerifyPaymentException $exception) {
-                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " verify become failed.", self::className());
+                        \Yii::error("Gate verify become failed.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
                         if (isset($locVerifyCacheName))
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (SecurityException $exception) {
-                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " have security error.", self::className());
+                        \Yii::error("Gate have security error.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
                         if (isset($locVerifyCacheName))
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (ConnectionException $exception) {
-                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
+                        \Yii::error("Gate not available now.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
                         if (isset($locVerifyCacheName))
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\RuntimeException $exception) {
-                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in verify payment.", self::className());
+                        \Yii::error("Gate has problem in verify payment.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
                         if (isset($locVerifyCacheName))
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\Exception $exception) {
-                        \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to verify payment request.", self::className());
+                        \Yii::error("Gate has a hard error while trying to verify payment request.", self::className());
                         \Yii::error($exception->getMessage(), self::className());
                         \Yii::error($exception->getTrace(), self::className());
                         if (isset($locVerifyCacheName))
@@ -321,10 +322,7 @@ class Payment extends Component{
              */
             self::saveLogData($transactionSession, $gate, TransactionLog::STATUS_PAYMENT_REQ);
 
-            /**
-             * Throw an verify event. can be used in kernel to save and modify transactions.
-             */
-            $transactionSession = TransactionSession::findOne($gate->getOrderId());
+
             $event = new PaymentEvent();
             $event->setGate($gate)
                 ->setStatus($gate->getStatus())
