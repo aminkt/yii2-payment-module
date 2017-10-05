@@ -36,12 +36,12 @@ class MellatGate extends AbstractGate
      */
     public function dispatchRequest()
     {
-        $this->statusCode = $_POST['ResCode'] == '0';
+        $this->statusCode = $_POST['ResCode'];
         $this->setOrderId($_POST['SaleOrderId']);
         if (isset($_POST['ResCode']) && $_POST['ResCode'] == '0' && !empty($_POST['RefId'])) {
             $this->setAuthority($_POST['RefId']);
             if (!empty($_POST['CardHolderPan'])) {
-                //todo when user pay with mobile mellat will post CardHolderPan with 2 less stars
+                // when user pay with mobile mellat will post CardHolderPan with 2 less stars
                 if (strlen($_POST['CardHolderPan']) == 14) {
                     $_POST['CardHolderPan'] = str_replace('****', '******', $_POST['CardHolderPan']);
                 }

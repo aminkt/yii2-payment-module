@@ -377,7 +377,7 @@ class Payment extends Component{
         /**
          * Throw an verify event. can be used in kernel to save and modify transactions.
          */
-        $transactionSession = TransactionSession::findOne($gate->getOrderId());
+        $transactionSession = TransactionSession::findOne($gate->getOrderId(false));
 
         /**
          * Save transactions logs.

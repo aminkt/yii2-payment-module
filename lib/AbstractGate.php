@@ -285,7 +285,7 @@ abstract class AbstractGate extends Component
     public function getOrderId($test = true)
     {
         if (YII_ENV_DEV and $test)
-            return $this->orderId . '000_Test';
+            return $this->orderId . '000';
         return $this->orderId;
     }
 
@@ -296,7 +296,7 @@ abstract class AbstractGate extends Component
     public function setOrderId($orderId)
     {
         if (YII_ENV_DEV) {
-            $orderId = str_replace('000_Test', '', $orderId);
+            $orderId = str_replace('000', '', $orderId);
         }
         $this->orderId = $orderId;
         return $this;
