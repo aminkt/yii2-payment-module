@@ -98,7 +98,7 @@ class Sep extends AbstractGate
                 'MID' => $this->getIdentityData('MID')
             ]);
             $this->response = $this->soapProxy->verifyTransaction($this->getAuthority(), $this->getIdentityData('MID'));
-
+            \Yii::info("Amount of transaction: " . $this->getAmount());
             if ($this->response > 0 and $this->response == $this->getAmount()) {
                 return $this;
             } else {
@@ -145,7 +145,7 @@ class Sep extends AbstractGate
     {
         try {
             \Yii::error($this->getIdentityData('webService'));
-            $this->soapProxy = new SoapClient($this->getIdentityWebService() . '?WSDL', [
+            $this->soapProxy = new SoapClient($this->getIdentityWebService(), [
                 'encoding' => 'UTF-8',
                 'connection_timeout' => 20,
                 'cache_wsdl' => WSDL_CACHE_NONE

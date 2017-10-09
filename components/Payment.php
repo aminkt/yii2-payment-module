@@ -305,7 +305,7 @@ class Payment extends Component{
         $transactionSession->authority = $gate->getAuthority();
         $transactionSession->orderId = $orderId;
         $transactionSession->psp = $gate::className();
-        $transactionSession->amount = $gate->getAmount();
+        $transactionSession->amount = $gate->getAmount(false);
         $transactionSession->description = Html::encode($description);
         $transactionSession->status = TransactionSession::STATUS_NOT_PAID;
         $transactionSession->type = TransactionSession::TYPE_WEB_BASE;

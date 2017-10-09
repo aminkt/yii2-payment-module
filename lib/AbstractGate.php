@@ -196,11 +196,15 @@ abstract class AbstractGate extends Component
 
     /**
      * Return amount in IR Rial.
+     * @param bool $rial Return amount as rial.
      * @return int
      */
-    public function getAmount()
+    public function getAmount($rial = true)
     {
-        return $this->amount * 10;
+        if ($rial)
+            return $this->amount * 10;
+
+        return $this->amount;
     }
 
     /**
