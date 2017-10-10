@@ -60,6 +60,12 @@ class m170102_161634_init extends Migration
     }
 
     private function createTables(){
+        $tableOptions = null;
+        if ($this->db->driverName === 'mysql') {
+            // http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci
+            $tableOptions = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE=InnoDB';
+        }
+
         // Store transaction sessions.
         $this->createTable('{{%transaction_sessions}}', [
             'id'=>$this->primaryKey(),
@@ -79,7 +85,7 @@ class m170102_161634_init extends Migration
             'updateAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
             'createAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP',
 
-        ]);
+        ], $tableOptions);
 
         $this->createTable('{{%transaction_inquiries}}', [
             'id' => $this->primaryKey(),
@@ -88,7 +94,7 @@ class m170102_161634_init extends Migration
             'description' => $this->text(),
             'updateAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
             'createAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP',
-        ]);
+        ], $tableOptions);
 
         //Create transaction_log table
         $this->createTable('{{%transaction_log}}', [
@@ -102,7 +108,7 @@ class m170102_161634_init extends Migration
             'description'=>$this->text(),
             'ip'=>$this->string(),
             'time' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
-        ]);
+        ], $tableOptions);
     }
 
     private function removeTables(){
