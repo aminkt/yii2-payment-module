@@ -9,22 +9,22 @@ use yii\db\Expression;
 /**
  * This is the model class for table "{{%transaction_sessions}}".
  *
- * @property integer $id
- * @property integer $orderId
- * @property string $authority
- * @property string $psp
- * @property double $amount
- * @property string $trackingCode
- * @property string $description
- * @property string $note
- * @property integer $status
- * @property integer $type
- * @property string $userCardPan
- * @property string $userCardHash
- * @property string $userMobile
- * @property string $ip
- * @property string $updateAt
- * @property string $createAt
+ * @property integer $id             Transaction session id.
+ * @property string $orderId        Order tracking code
+ * @property string $authority      Bank transaction id. unique for every session.
+ * @property string $psp            Name of psp.
+ * @property double $amount         Amount of transaction.
+ * @property string $trackingCode   Bank tracking code to track transaction later.
+ * @property string $description    Description of transaction.
+ * @property string $note           Operator note of transaction.
+ * @property integer $status         Status of transaction.
+ * @property integer $type           Type of transaction. Cart-to-cart or internet gate.
+ * @property string $userCardPan    Card number of user.
+ * @property string $userCardHash   Card hashed string.
+ * @property string $userMobile     Mobile of user.
+ * @property string $ip             Ip of user that create transaction.
+ * @property string $updateAt       Update time of session.
+ * @property string $createAt       Create time of session.
  *
  * @property TransactionInquiry[] $inquiries
  * @property TransactionLog[] $logs
@@ -71,9 +71,9 @@ class TransactionSession extends ActiveRecord
     {
         return [
             [['orderId'], 'required'],
-            [['orderId', 'status', 'type'], 'integer'],
+            [['status', 'type'], 'integer'],
             [['amount'], 'number'],
-            [['description', 'note', 'psp'], 'string'],
+            [['description', 'note', 'psp', 'orderId'], 'string'],
             [['updateAt', 'createAt'], 'safe'],
             [['authority', 'trackingCode', 'userCardPan', 'userCardHash'], 'string', 'max' => 255],
             [['userMobile'], 'string', 'max' => 15],
