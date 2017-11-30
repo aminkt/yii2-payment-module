@@ -43,4 +43,13 @@ class Payment extends \yii\base\Module
 
         return \Yii::$app->getModule('payment');
     }
+
+    /**
+     * Return payment components.
+     * @return components\Payment
+     */
+    public function getPayment()
+    {
+        return $this->payment;
+    }
 }

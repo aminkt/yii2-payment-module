@@ -2,6 +2,7 @@
 
 namespace aminkt\payment\components;
 
+use aminkt\exceptions\InvalidAmountException;
 use aminkt\payment\exceptions\ConnectionException;
 use aminkt\payment\exceptions\SecurityException;
 use aminkt\payment\exceptions\VerifyPaymentException;
@@ -10,7 +11,6 @@ use aminkt\payment\models\TransactionInquiry;
 use aminkt\payment\models\TransactionLog;
 use aminkt\payment\models\TransactionSession;
 use aminkt\userAccounting\exceptions\RuntimeException;
-use common\exceptions\InvalidAmountException;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\helpers\Html;
@@ -56,7 +56,7 @@ class Payment extends Component{
     {
         parent::init();
         if(is_array($this->gates) and count($this->gates)>0){
-            foreach ($this->gates as $gate=>$config){
+            foreach ($this->gates as $gate=> $config){
                 $class = $config['class'];
                 $identityData = $config['identityData'];
                 /** @var AbstractGate $obj */
@@ -499,8 +499,8 @@ class Payment extends Component{
 
 
     /**
-    * @return string
-    */
+     * @return string
+     */
     public static function getSecureKey()
     {
         return self::$secureKey;

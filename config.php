@@ -3,7 +3,7 @@ return [
     'components' => [
         'payment' => [
             'class' => 'aminkt\payment\components\Payment',
-            'callbackUr'=>['/payment/default/verify'],
+            'callback' => ['/payment/default/verify'],
             'gates'=>[
                 \aminkt\payment\lib\Sep::$gateId => [
                     'class' => \aminkt\payment\lib\Sep::className(),
