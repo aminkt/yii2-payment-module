@@ -3,6 +3,7 @@
 namespace aminkt\payment\lib;
 
 use aminkt\payment\components\Payment;
+use aminkt\payment\models\TransactionSession;
 use yii\base\Component;
 use yii\helpers\Inflector;
 
@@ -322,6 +323,23 @@ abstract class AbstractGate extends Component
             return $this->getIdentityData(Inflector::variablize($matches[1]));
         }
         return parent::__call($name, $params);
+    }
+
+
+    /**
+     * Return transaction model of current pay request.
+     * This may return null in pay request.
+     * Call this method after dispatch method.
+     *
+     * @return \aminkt\payment\models\TransactionSession|null
+     */
+    public function getTransactionModel()
+    {
+        $session = TransactionSession::findOne($this->getOrderId(false));
+        if ($session)
+            return $session;
+        \Yii::warning("Transaction session model not found.");
+        return null;
     }
 
 }

@@ -171,7 +171,7 @@ class Payment extends Component{
 
                         self::$currentGateObject->dispatchRequest();
 
-                        $session = TransactionSession::findOne(self::$currentGateObject->getOrderId(false));
+                        $session = self::$currentGateObject->getTransactionModel();
                         if (!$session) {
                             throw new NotFoundHttpException("Session not found.");
                         }
