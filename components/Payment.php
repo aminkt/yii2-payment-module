@@ -29,7 +29,7 @@ class Payment extends Component{
     /** @var array $callbackUrl array for show router of callback */
     public $callback = ['/payment/default/verify'];
 
-    /** @var array send to bank page array for show router of callback */
+    /** @var array|boolean send to bank page array for show route of callback */
     public $sendPage = ['/payment/default/send'];
 
     /** @var AbstractGate[] $gatesObjects */
@@ -115,6 +115,7 @@ class Payment extends Component{
                     }
                     self::$currentGateObject->setOrderId($sessionId);
                     $payRequest = self::$currentGateObject->payRequest();
+
                     if($payRequest){
                         if (self::$currentGateObject->getAuthority())
                             $this->updatePaymentDataInDatabase($sessionId, 'authority', self::$currentGateObject->getAuthority());

@@ -36,6 +36,11 @@ class Payment extends \yii\base\Module
         \Yii::configure($this, $config);
     }
 
+    /**
+     * @return self
+     *
+     * @author Amin Keshavarz <amin@keshavarz.pro>
+     */
     public static function getInstance()
     {
         if (parent::getInstance())

@@ -2,13 +2,17 @@
 
 namespace aminkt\payment\lib;
 
+use yii\httpclient\Client;
+
 /**
  * Class ZarinPal gate of Zarinpal
  *
- * @method string getIdentityMID() Return terminal id.
- * @method string getIdentityPassword() Return Password.
- * @method string getIdentityWebService()   Return webservice address.
- * @method string getIdentityBankGatewayAddress()   Return bank gateway address.
+ * @method string getIdentityMerchantCode() Return merchant code.
+ * @method string getIdentityIsZarinGate() Return true if want to use zarin gate.
+ * @method string getIdentityEnableSandbox() Return true if want to use sandbox gate.
+ * @method string getIdentityRedirectUrl() Return redirect address.
+ * @method string getIdentityPayRequestUrl() Return pay request address.
+ * @method string getIdentityVerifyRequestUrl() Return verify request address.
  *
  * @package payment\lib
  */
@@ -17,6 +21,10 @@ class ZarinPal extends AbstractGate
     public static $transBankName = 'ZatinPal';
     public static $gateId = 'Zarin96';
 
+    private $status = false;
+    private $request;
+    private $response;
+
     /**
      * Dispatch payment response from bank.
      *
@@ -24,7 +32,11 @@ class ZarinPal extends AbstractGate
      */
     public function dispatchRequest()
     {
-        // TODO: Implement dispatchRequest() method.
+        if (isset($_GET['Authority'])) {
+            $this->setAuthority($_GET['Authority']);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -32,12 +44,42 @@ class ZarinPal extends AbstractGate
      *
      * @throws \aminkt\payment\exceptions\ConnectionException   Connection failed.
      *
-     * @return array
+     * @return array|boolean
      * Return data to redirect user to bank.
      */
     public function payRequest()
     {
-        // TODO: Implement payRequest() method.
+        $data = [
+            'MerchantID' => $this->getIdentityMerchantCode(),
+            'Amount' => $this->getAmount(false),
+            'CallbackURL' => $this->getCallbackUrl(),
+            'Description' => "Handled by aminkt\\yii2-payment-module"
+        ];
+
+        $this->request = $data;
+
+        $client = new Client();
+        $request = $client->createRequest()
+            ->setMethod('post')
+            ->setUrl($this->getIdentityPayRequestUrl())
+            ->setContent(json_encode($data))
+            ->setHeaders([
+                'Content-Type' => 'application/json'
+            ])
+            ->setData($data);
+        /** @var \yii\httpclient\Response $response */
+        $response = $request->send();
+        $this->response = $response;
+        $response = json_decode($response->getContent(), true);
+
+        $this->status = $response['Status'];
+
+        if (isset($response['Authority'])) {
+            $this->setAuthority($response['Authority']);
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -66,7 +108,9 @@ class ZarinPal extends AbstractGate
      */
     public function redirectToBankFormData()
     {
-        // TODO: Implement redirectToBankFormData() method.
+        return [
+            'redirect' => sprintf($this->getIdentityRedirectUrl(), $this->getAuthority())
+        ];
     }
 
     /**
@@ -79,7 +123,37 @@ class ZarinPal extends AbstractGate
      */
     public function verifyTransaction()
     {
-        // TODO: Implement verifyTransaction() method.
+        if ($this->dispatchRequest()) {
+            $data = [
+                'MerchantID' => $this->getIdentityMerchantCode(),
+                'Amount' => $this->getAmount(false),
+                'Authority' => $this->getAuthority()
+            ];
+
+            $this->request = $data;
+
+            $client = new Client();
+            $request = $client->createRequest()
+                ->setMethod('post')
+                ->setUrl($this->getIdentityVerifyRequestUrl())
+                ->setContent(json_encode($data))
+                ->setHeaders([
+                    'Content-Type' => 'application/json'
+                ])
+                ->setData($data);
+            /** @var \yii\httpclient\Response $response */
+            $response = $request->send();
+            $this->response = $response;
+            $response = json_decode($response->getContent(), true);
+
+            $this->status = $response['Status'];
+
+            if ($this->status == 100) {
+                $this->setTrackingCode($response['RefID']);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -89,7 +163,7 @@ class ZarinPal extends AbstractGate
      */
     public function getRequest()
     {
-        // TODO: Implement getRequest() method.
+        return $this->request;
     }
 
     /**
@@ -99,7 +173,7 @@ class ZarinPal extends AbstractGate
      */
     public function getResponse()
     {
-        // TODO: Implement getResponse() method.
+        return $this->response;
     }
 
     /**
@@ -109,6 +183,6 @@ class ZarinPal extends AbstractGate
      */
     public function getStatus()
     {
-        // TODO: Implement getStatus() method.
+        return $this->status == 100;
     }
 }
