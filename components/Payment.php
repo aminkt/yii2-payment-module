@@ -107,9 +107,9 @@ class Payment extends Component{
             foreach (static::$gatesObjects as $gate){
                 try{
                     self::$currentGateObject = $gate;
-                    self::$currentGateObject->setAmount($amount)
-                        ->setCallbackUrl($this->callback);
+                    self::$currentGateObject->setAmount($amount);
                     $sessionId = $this->savePaymentDataIntoDatabase(self::$currentGateObject, $orderId, $description);
+                    self::$currentGateObject->setCallbackUrl($this->callback);
                     if (!$sessionId) {
                         throw new \RuntimeException("Can not save data into database.");
                     }

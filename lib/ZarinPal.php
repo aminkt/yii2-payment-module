@@ -2,6 +2,7 @@
 
 namespace aminkt\payment\lib;
 
+use aminkt\payment\components\Payment;
 use yii\httpclient\Client;
 
 /**
@@ -32,6 +33,7 @@ class ZarinPal extends AbstractGate
      */
     public function dispatchRequest()
     {
+        $this->setOrderId($_GET['oi']);
         if (isset($_GET['Authority'])) {
             $this->setAuthority($_GET['Authority']);
             return true;
@@ -184,5 +186,19 @@ class ZarinPal extends AbstractGate
     public function getStatus()
     {
         return $this->status == 100;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setCallbackUrl($callbackUrl)
+    {
+        $bank = Payment::encryptBankName(static::$gateId);
+        $token = Payment::generatePaymentToken();
+        $callbackUrl['bc'] = $bank;
+        $callbackUrl['token'] = $token;
+        $callbackUrl['oi'] = $this->getOrderId();
+        $this->callbackUrl = \Yii::$app->getUrlManager()->createAbsoluteUrl($callbackUrl);
+        return $this;
     }
 }
