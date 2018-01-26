@@ -22,7 +22,7 @@ class ZarinPal extends AbstractGate
     public static $transBankName = 'ZatinPal';
     public static $gateId = 'Zarin96';
 
-    private $status = false;
+    public $status = false;
     private $request;
     private $response;
 
@@ -71,8 +71,8 @@ class ZarinPal extends AbstractGate
             ->setData($data);
         /** @var \yii\httpclient\Response $response */
         $response = $request->send();
-        $this->response = $response;
         $response = json_decode($response->getContent(), true);
+        $this->response = $response;
 
         $this->status = $response['Status'];
 
@@ -145,14 +145,14 @@ class ZarinPal extends AbstractGate
                 ->setData($data);
             /** @var \yii\httpclient\Response $response */
             $response = $request->send();
-            $this->response = $response;
             $response = json_decode($response->getContent(), true);
 
+            $this->response = $response;
             $this->status = $response['Status'];
 
-            if ($this->status == 100) {
+            if ($this->status == 100 or $this->status == 101) {
                 $this->setTrackingCode($response['RefID']);
-                return true;
+                return $this;
             }
         }
         return false;
@@ -185,7 +185,7 @@ class ZarinPal extends AbstractGate
      */
     public function getStatus()
     {
-        return $this->status == 100;
+        return ($this->status == 100 or $this->status == 101);
     }
 
     /**

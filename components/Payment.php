@@ -10,7 +10,6 @@ use aminkt\payment\lib\AbstractGate;
 use aminkt\payment\models\TransactionInquiry;
 use aminkt\payment\models\TransactionLog;
 use aminkt\payment\models\TransactionSession;
-use aminkt\userAccounting\exceptions\RuntimeException;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\helpers\Html;
@@ -408,7 +407,7 @@ class Payment extends Component{
 
         if (!$transactionSession->save()) {
             \Yii::error($transactionSession->getErrors(), self::className());
-            throw new RuntimeException('Can not save transaction session data.', 12);
+            throw new \RuntimeException('Can not save transaction session data.', 12);
         } else {
             /**
              * Create an inquiry request for valid payments.
@@ -453,7 +452,7 @@ class Payment extends Component{
 
         if (!$inquiryModel->save()) {
             \Yii::error($inquiryModel->getErrors(), self::className());
-            throw new RuntimeException('Can not save transaction inquiry data.', 12);
+            throw new \RuntimeException('Can not save transaction inquiry data.', 12);
         }
 
         /**

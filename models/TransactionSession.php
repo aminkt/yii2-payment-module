@@ -73,9 +73,9 @@ class TransactionSession extends ActiveRecord
             [['orderId'], 'required'],
             [['status', 'type'], 'integer'],
             [['amount'], 'number'],
-            [['description', 'note', 'psp', 'orderId'], 'string'],
-            [['updateAt', 'createAt'], 'safe'],
-            [['authority', 'trackingCode', 'userCardPan', 'userCardHash'], 'string', 'max' => 255],
+            [['description', 'note', 'psp'], 'string'],
+            [['updateAt', 'createAt', 'orderId', 'authority', 'trackingCode'], 'safe'],
+            [['userCardPan', 'userCardHash'], 'string', 'max' => 255],
             [['userMobile'], 'string', 'max' => 15],
             [['ip'], 'string', 'max' => 25],
         ];
