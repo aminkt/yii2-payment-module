@@ -82,8 +82,8 @@ class m170102_161634_init extends Migration
             'userCardHash' => $this->string(),
             'userMobile' => $this->string(15),
             'ip' => $this->string(25),
-            'updateAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
-            'createAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP',
+            'updateAt' => $this->dateTime(),
+            'createAt' => $this->dateTime(),
 
         ], $tableOptions);
 
@@ -92,8 +92,8 @@ class m170102_161634_init extends Migration
             'sessionId' => $this->integer()->notNull(),
             'status' => $this->smallInteger(1)->defaultValue(1),
             'description' => $this->text(),
-            'updateAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
-            'createAt' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP',
+            'updateAt' => $this->dateTime(),
+            'createAt' => $this->dateTime(),
         ], $tableOptions);
 
         //Create transaction_log table
@@ -107,7 +107,7 @@ class m170102_161634_init extends Migration
             'responseCode'=>$this->text(),
             'description'=>$this->text(),
             'ip'=>$this->string(),
-            'time' => $this->dateTime() . ' DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+            'time' => $this->dateTime()
         ], $tableOptions);
     }
 
