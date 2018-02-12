@@ -55,7 +55,7 @@ class ZarinPal extends AbstractGate
             'MerchantID' => $this->getIdentityMerchantCode(),
             'Amount' => $this->getAmount(false),
             'CallbackURL' => $this->getCallbackUrl(),
-            'Description' => " "
+            'Description' => "خرید"
         ];
 
         $this->request = $data;
