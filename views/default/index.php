@@ -6,46 +6,65 @@
 ?>
 
 
-    <?php
-    echo  \yii\grid\GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            [
-                'attribute' => 'orderId'
+<?php
+echo \yii\grid\GridView::widget([
+    'dataProvider' => $dataProvider,
+    'filterModel' => $searchModel,
+    'columns' => [
+        ['class' => 'yii\grid\SerialColumn'],
+        [
+            'attribute' => 'orderId'
+        ],
+        [
+            'attribute' => 'psp'
+        ],
+        [
+            'attribute' => 'authority'
+        ],
+        [
+            'attribute' => 'amount'
+        ],
+        [
+            'attribute' => 'trackingCode'
+        ],
+        [
+            'attribute' => 'type',
+            'value' => function ($model) {
+                return $model::getLabel($model->type, 'type');
+            },
+            'filter' => [
+                \aminkt\payment\models\TransactionSession::TYPE_WEB_BASE => 'اینترنتی',
+                \aminkt\payment\models\TransactionSession::TYPE_CART_TO_CART => 'کارت به کارت',
             ],
-            [
-                'attribute' => 'psp'
+        ],
+        [
+            'attribute' => 'status',
+            'value' => function ($model) {
+                return $model::getLabel($model->status, 'status');
+            },
+            'filter' => [
+                \aminkt\payment\models\TransactionSession::STATUS_NOT_PAID => 'پرداخت نشده',
+                \aminkt\payment\models\TransactionSession::STATUS_PAID => 'پرداخت شده',
+                \aminkt\payment\models\TransactionSession::STATUS_FAILED => 'ناموفق',
+                \aminkt\payment\models\TransactionSession::STATUS_INQUIRY_PROBLEM => 'مغایرت بانکی',
             ],
-            [
-                'attribute' => 'authority'
-            ],
-            [
-                'attribute' => 'amount'
-            ],
-            [
-                'attribute' => 'trackingCode'
-            ],
-            [
-                'attribute' => 'type'
-            ],
-            [
-                'attribute' => 'userCardPan'
-            ],
-            [
-                'attribute' => 'userMobile'
-            ],
-            [
-                'label' => 'ip',
-                'attribute' => 'ip'
-            ],
-            [
-                'attribute' => 'updateAt'
-            ],
-            [
-                'attribute' => 'createAt'
-            ],
-        ]
-    ]);
-    ?>
+        ],
+        [
+            'attribute' => 'userCardPan'
+        ],
+        [
+            'attribute' => 'userMobile'
+        ],
+        [
+            'label' => 'ip',
+            'attribute' => 'ip'
+        ],
+        [
+            'attribute' => 'updateAt'
+        ],
+        [
+            'attribute' => 'createAt'
+        ],
+    ]
+]);
+?>
