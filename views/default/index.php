@@ -60,10 +60,16 @@ echo \yii\grid\GridView::widget([
             'attribute' => 'ip'
         ],
         [
-            'attribute' => 'updateAt'
+            'attribute' => 'updateAt',
+            'value' => function ($model) {
+                return \Yii::$app->getFormatter()->asDatetime($model->updateAt, null);
+            }
         ],
         [
-            'attribute' => 'createAt'
+            'attribute' => 'createAt',
+            'value' => function ($model) {
+                return \Yii::$app->getFormatter()->asDatetime($model->createAt, null);
+            }
         ],
     ]
 ]);
