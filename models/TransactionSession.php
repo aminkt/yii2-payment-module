@@ -102,7 +102,7 @@ class TransactionSession extends ActiveRecord
             'userMobile' => 'تلفن مشتری',
             'ip' => 'Ip',
             'updateAt' => 'تاریخ ویرایش',
-            'createAt' => 'زمان ویرایش',
+            'createAt' => 'تاریخ ایجاد',
         ];
     }
 
