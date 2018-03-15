@@ -50,7 +50,7 @@ class TransactionSessionSearch extends TransactionSession
             return $dataProvider;
         }
 
-        $query->andFilterWhere(['like', 'orderId', $this->orderId])
+        $query->andWhere(['orderId' => $this->orderId])
             ->andFilterWhere(['like', 'psp', $this->psp])
             ->andFilterWhere(['like', 'authority', $this->authority])
             ->andFilterWhere(['like', 'amount', $this->amount])

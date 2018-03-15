@@ -89,7 +89,7 @@ class TransactionSession extends ActiveRecord
         return [
             'id' => 'ID',
             'orderId' => 'شناسه سفارش',
-            'authority' => 'Authority',
+            'authority' => 'شناسه پرداخت',
             'psp' => 'نام درگاه',
             'amount' => 'مبلغ',
             'trackingCode' => 'کد پیگیری',
@@ -102,7 +102,7 @@ class TransactionSession extends ActiveRecord
             'userMobile' => 'تلفن مشتری',
             'ip' => 'Ip',
             'updateAt' => 'تاریخ ویرایش',
-            'createAt' => 'زمان ویرایش',
+            'createAt' => 'تاریخ ایجاد',
         ];
     }
 
@@ -120,5 +120,48 @@ class TransactionSession extends ActiveRecord
     public function getInquiries()
     {
         return $this->hasMany(TransactionInquiry::className(), ['sessionId' => 'id']);
+    }
+
+    /**
+     * Get const label
+     *
+     * @param $label
+     * @param string $type
+     *
+     * @return string
+     *
+     * @author Saghar Mojdehi <saghar.mojdehi@gmail.com>
+     */
+    public static function getLabel($label, $type = 'status')
+    {
+        if ($type == 'status') {
+            switch ($label) {
+                case self::STATUS_NOT_PAID:
+                    return 'پرداخت نشده';
+                    break;
+                case self::STATUS_PAID:
+                    return 'پرداخت شده';
+                    break;
+                case self::STATUS_FAILED:
+                    return 'ناموفق';
+                    break;
+                case self::STATUS_INQUIRY_PROBLEM:
+                    return 'مغایرت بانکی';
+                    break;
+                default:
+                    return 'نامشخص';
+            }
+        } elseif ($type == 'type') {
+            switch ($label) {
+                case self::TYPE_WEB_BASE and $type == 'type':
+                    return 'اینترنتی';
+                    break;
+                case self::TYPE_CART_TO_CART and $type == 'type':
+                    return 'کارت به کارت';
+                    break;
+                default:
+                    return 'نامشخص';
+            }
+        }
     }
 }
