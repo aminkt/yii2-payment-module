@@ -4,7 +4,7 @@
     "keywords": ["yii", "payment", "gateway", "online", "shopping"],
     "type": "yii2-extension",
     "support": {
-    	"source": "https://gitlab.com/aminkt/yii2-payment-module"
+    	"source": "https://github.com/aminkt/yii2-payment-module"
     },
     "authors": [
     	{
