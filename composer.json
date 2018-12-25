@@ -19,7 +19,7 @@
   "autoload": {
     "psr-4": {
       "aminkt\\yii2\\oauth2\\": "src",
-      "aminkt\\yii2\\oauth2\\\\test\\": "tests",
+      "aminkt\\yii2\\oauth2\\\\test\\": "tests"
     }
   }
 }
