@@ -1,28 +1,23 @@
 <?php
 
-namespace aminkt\yii2\payment\lib;
+namespace aminkt\yii2\payment\gates;
 
-use aminkt\yii2\payment\components\Payment;
 use aminkt\yii2\payment\models\TransactionSession;
+use Faker\Provider\Payment;
 use yii\base\Component;
 use yii\helpers\Inflector;
 
 /**
  * Class AbstractGate
+ *
  * @package payment\lib
  */
 abstract class AbstractGate extends Component
 {
-    /** @var string $pspName */
-    public static $pspName = 'Gate';
-
-    /** @var string $gateId */
-    public static $gateId = 'G1';
-
     /** @var int Amount of transaction */
     protected $amount = 0;
 
-    /** @var string  $callbackUrl */
+    /** @var string $callbackUrl */
     protected $callbackUrl;
 
     /** @var  string $orderId Order id */
@@ -106,12 +101,14 @@ abstract class AbstractGate extends Component
      *
      * @return bool
      */
-    public function inquiryTransaction(){
+    public function inquiryTransaction()
+    {
         return true;
     }
 
     /**
      * Return string system provider name.
+     *
      * @return string
      */
     public function getPSPName()
@@ -122,6 +119,7 @@ abstract class AbstractGate extends Component
 
     /**
      * Get callback url.
+     *
      * @return string
      */
     public function getCallbackUrl()
@@ -130,74 +128,45 @@ abstract class AbstractGate extends Component
     }
 
     /**
+     * Set callback url.
+     *
      * @param array $callbackUrl
+     *
      * @return $this
      */
     public function setCallbackUrl($callbackUrl)
     {
-        $bank = Payment::encryptBankName(static::$gateId);
-        $token = Payment::generatePaymentToken();
-        $callbackUrl['bc']=$bank;
-        $callbackUrl['token']=$token;
         $this->callbackUrl = \Yii::$app->getUrlManager()->createAbsoluteUrl($callbackUrl);
-        return $this;
-    }
 
-    /**
-     * Return identity data.
-     * @param $item
-     * @return mixed
-     */
-    public function getIdentityData($item)
-    {
-        return $this->identityData[$item];
-    }
-
-    /**
-     * Set identity data.
-     * @param array $identityData
-     * @return $this
-     */
-    public function setIdentityData($identityData)
-    {
-        $this->identityData = $identityData;
         return $this;
     }
 
     /**
      * Return bank requests as array.
+     *
      * @return mixed
      */
     public abstract function getRequest();
 
     /**
      * Return bank response as array.
+     *
      * @return mixed
      */
     public abstract function getResponse();
 
     /**
      * Return status of pay request, verify or inquiry request.
+     *
      * @return boolean
      */
     public abstract function getStatus();
 
     /**
-     * @param int $amount
-     * @return $this
-     */
-    public function setAmount($amount)
-    {
-        if (is_int($amount) or is_float($amount) or is_double($amount) and $amount > 100)
-            $this->amount = $amount;
-        else
-            throw new \InvalidArgumentException("Amount should be a numeric value and be grater than 100 in IR Toman");
-        return $this;
-    }
-
-    /**
      * Return amount in IR Rial.
+     *
      * @param bool $rial Return amount as rial.
+     *
      * @return int
      */
     public function getAmount($rial = true)
@@ -206,6 +175,29 @@ abstract class AbstractGate extends Component
             return $this->amount * 10;
 
         return $this->amount;
+    }
+
+    /**
+     * Set allowed price.
+     *
+     * @param int $amount
+     *
+     * @return $this
+     */
+    public function setAmount($amount)
+    {
+        $minAllowedPrice = \aminkt\yii2\payment\Payment::getInstance()->minAmount;
+        $maxAllowedPrice = \aminkt\yii2\payment\Payment::getInstance()->maxAmount;
+        if (is_int($amount) and $amount >= $minAllowedPrice) {
+            if (!$maxAllowedPrice) {
+                $this->amount = $amount;
+            } elseif ($maxAllowedPrice <= $amount) {
+                $this->amount = $amount;
+            }
+            return $this;
+        }
+
+        throw new \InvalidArgumentException("Amount should be a numeric value and be grater than 100 in IR Toman");
     }
 
     /**
@@ -218,6 +210,7 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $authority
+     *
      * @return $this
      */
     public function setAuthority($authority)
@@ -236,6 +229,7 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $trackingCode
+     *
      * @return $this
      */
     public function setTrackingCode($trackingCode)
@@ -254,6 +248,7 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $cardPan
+     *
      * @return $this
      */
     public function setCardPan($cardPan)
@@ -272,6 +267,7 @@ abstract class AbstractGate extends Component
 
     /**
      * @param string $cardHash
+     *
      * @return $this
      */
     public function setCardHash($cardHash)
@@ -280,38 +276,11 @@ abstract class AbstractGate extends Component
         return $this;
     }
 
-
-    /**
-     * Return order id.
-     * @param bool $test Second value that define you should return test data. be care full that application should in test env to get test data.
-     *
-     * @return string
-     */
-    public function getOrderId($test = true)
-    {
-        if (YII_ENV_DEV and $test)
-            return $this->orderId . '000';
-        return $this->orderId;
-    }
-
-    /**
-     * @param string $orderId
-     * @return $this
-     */
-    public function setOrderId($orderId)
-    {
-        if (YII_ENV_DEV) {
-            $orderId = str_replace('000', '', $orderId);
-        }
-        $this->orderId = $orderId;
-        return $this;
-    }
-
     /**
      * Magic method to handle some method that not implemented.
      *
      * @param string $name
-     * @param array $params
+     * @param array  $params
      *
      * @return mixed
      */
@@ -325,6 +294,30 @@ abstract class AbstractGate extends Component
         return parent::__call($name, $params);
     }
 
+    /**
+     * Return identity data.
+     *
+     * @param $item
+     *
+     * @return mixed
+     */
+    public function getIdentityData($item)
+    {
+        return $this->identityData[$item];
+    }
+
+    /**
+     * Set identity data.
+     *
+     * @param array $identityData
+     *
+     * @return $this
+     */
+    public function setIdentityData($identityData)
+    {
+        $this->identityData = $identityData;
+        return $this;
+    }
 
     /**
      * Return transaction model of current pay request.
@@ -340,6 +333,35 @@ abstract class AbstractGate extends Component
             return $session;
         \Yii::warning("Transaction session model not found.");
         return null;
+    }
+
+    /**
+     * Return order id.
+     *
+     * @param bool $test Second value that define you should return test data. be care full that application should in
+     *                   test env to get test data.
+     *
+     * @return string
+     */
+    public function getOrderId($test = true)
+    {
+        if (YII_ENV_DEV and $test)
+            return $this->orderId . '000';
+        return $this->orderId;
+    }
+
+    /**
+     * @param string $orderId
+     *
+     * @return $this
+     */
+    public function setOrderId($orderId)
+    {
+        if (YII_ENV_DEV) {
+            $orderId = str_replace('000', '', $orderId);
+        }
+        $this->orderId = $orderId;
+        return $this;
     }
 
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace aminkt\yii2\payment\lib;
+namespace aminkt\yii2\payment\gates;
 
 use aminkt\yii2\payment\exceptions\ConnectionException;
 use aminkt\yii2\payment\exceptions\VerifyPaymentException;

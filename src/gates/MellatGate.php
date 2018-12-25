@@ -1,7 +1,8 @@
 <?php
 
-namespace aminkt\yii2\payment\lib;
+namespace aminkt\yii2\payment\gates;
 
+use aminkt\exceptions\RequestPaymentException;
 use aminkt\yii2\payment\exceptions\ConnectionException;
 use aminkt\yii2\payment\exceptions\VerifyPaymentException;
 use SoapClient;
@@ -116,7 +117,7 @@ class MellatGate extends AbstractGate
                     throw new ConnectionException("Mellat bank is not in service.", 3);
                 }
             } else
-                throw new \RuntimeException("Response not converted to array.", 4);
+                throw new RequestPaymentException("Response not converted to array.", 4);
 
         }catch (SoapFault $f) {
             throw new ConnectionException($f->getMessage(), 5, $f);

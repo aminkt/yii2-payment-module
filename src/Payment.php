@@ -1,6 +1,7 @@
 <?php
 
 namespace aminkt\yii2\payment;
+use yii\base\InvalidConfigException;
 
 /**
  * Payment module definition class
@@ -12,11 +13,43 @@ namespace aminkt\yii2\payment;
  */
 class Payment extends \yii\base\Module
 {
-    const EVENT_PAYMENT_REQUEST = 'payment_req';
-    const EVENT_PAYMENT_VERIFY = 'payment_verify';
-    const EVENT_PAYMENT_INQUIRY = 'payment_inquiry';
+    const BEFORE_PAYMENT_REQUEST = 'before_payment_request';
+    const AFTER_PAYMENT_REQUEST = 'after_payment_request';
+    const BEFORE_PAYMENT_VERIFY = 'before_payment_verify';
+    const AFTER_PAYMENT_VERIFY = 'after_payment_verify';
+    const BEFORE_PAYMENT_INQUIRY = 'before_payment_inquiry';
+    const AFTER_PAYMENT_INQUIRY = 'after_payment_inquiry';
 
+    /**
+     * The order class name. Every payment session should have an order.
+     *
+     * @var \aminkt\yii2\payment\interfaces\OrderInterface  $orderClass
+     */
+    public $orderClass;
+
+    /**
+     * Min amount define how much price available to pay in bank gates.
+     * Default value is 0.
+     *
+     * @var integer $minAmount
+     */
+    public $minAmount = 0;
+
+    /**
+     * Max amount define how much price available to pay in bank gates.
+     * Default value is 10,000,000.
+     *
+     * @var integer $maxAmount
+     */
+    public $maxAmount = 10000000;
+
+    /**
+     * Configurations of payment component provided by this module.
+     *
+     * @var array $paymentComponentConfiguration
+     */
     public $paymentComponentConfiguration;
+
     /**
      * @inheritdoc
      */
@@ -28,16 +61,21 @@ class Payment extends \yii\base\Module
     public function init()
     {
         parent::init();
+        if(!$this->orderClass) {
+            throw new InvalidConfigException("Order calss should define.");
+        }
+
         // initialize the module with the configuration loaded from config.php
         $config = require(__DIR__ . '/config.php');
         if ($this->paymentComponentConfiguration) {
             $config['components']['payment'] = $this->paymentComponentConfiguration;
         }
+
         \Yii::configure($this, $config);
     }
 
     /**
-     * @return self
+     * @inheritdoc
      *
      * @author Amin Keshavarz <amin@keshavarz.pro>
      */
@@ -51,7 +89,8 @@ class Payment extends \yii\base\Module
 
     /**
      * Return payment components.
-     * @return components\Payment
+     *
+     * @return \aminkt\yii2\payment\components\Payment
      */
     public function getPayment()
     {
