@@ -116,4 +116,4 @@ In you backend panel you can use module routes to see various reports include Tr
 ---
 Structure of tables and classes:
 ---
-![Data base scheme](structure.png){ width: 100%; }
+![Data base scheme](doc/structure.png){ width: 100%; }

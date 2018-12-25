@@ -16,9 +16,10 @@
       "yiisoft/yii2": "~2.0.11",
       "yiisoft/yii2-httpclient": "~2.0.0"
     },
-    "autoload": {
-    	"psr-4": {
-    		"aminkt\\payment\\": ""
-    	}
+  "autoload": {
+    "psr-4": {
+      "aminkt\\yii2\\oauth2\\": "src",
+      "aminkt\\yii2\\oauth2\\\\test\\": "tests",
     }
+  }
 }
