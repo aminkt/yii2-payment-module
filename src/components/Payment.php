@@ -1,15 +1,15 @@
 <?php
 
-namespace aminkt\payment\components;
+namespace aminkt\yii2\payment\components;
 
-use aminkt\exceptions\InvalidAmountException;
-use aminkt\payment\exceptions\ConnectionException;
-use aminkt\payment\exceptions\SecurityException;
-use aminkt\payment\exceptions\VerifyPaymentException;
-use aminkt\payment\lib\AbstractGate;
-use aminkt\payment\models\TransactionInquiry;
-use aminkt\payment\models\TransactionLog;
-use aminkt\payment\models\TransactionSession;
+use aminkt\yii2\payment\InvalidAmountException;
+use aminkt\yii2\payment\exceptions\ConnectionException;
+use aminkt\yii2\payment\exceptions\SecurityException;
+use aminkt\yii2\payment\exceptions\VerifyPaymentException;
+use aminkt\yii2\payment\lib\AbstractGate;
+use aminkt\yii2\payment\models\TransactionInquiry;
+use aminkt\yii2\payment\models\TransactionLog;
+use aminkt\yii2\payment\models\TransactionSession;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\helpers\Html;

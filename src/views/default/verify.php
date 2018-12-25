@@ -17,7 +17,7 @@ $this->title = "نتیجه تراکنش - تل بیت";
         </p>
     <?php else: ?>
         <p>
-            <?php foreach (\aminkt\payment\components\Payment::getErrors() as $error) : ?>
+            <?php foreach (\aminkt\yii2\payment\components\Payment::getErrors() as $error) : ?>
                 <?= $error['code'] ?> : <?= $error['message'] ?>
                 <br>
             <?php endforeach; ?>
@@ -26,6 +26,6 @@ $this->title = "نتیجه تراکنش - تل بیت";
 
     <br>    <br>    <br>    <br>
     <p>
-        <?= \aminkt\payment\components\Payment::decryptBankName(Yii::$app->request->get('bc')) ?>
+        <?= \aminkt\yii2\payment\components\Payment::decryptBankName(Yii::$app->request->get('bc')) ?>
     </p>
 </div>

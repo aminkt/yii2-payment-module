@@ -1,6 +1,6 @@
 <?php
 
-namespace aminkt\payment\exceptions;
+namespace aminkt\yii2\payment\exceptions;
 
 /**
  * Class VerifyPaymentException

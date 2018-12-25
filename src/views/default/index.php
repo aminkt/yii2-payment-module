@@ -33,8 +33,8 @@ echo \yii\grid\GridView::widget([
                 return $model::getLabel($model->type, 'type');
             },
             'filter' => [
-                \aminkt\payment\models\TransactionSession::TYPE_WEB_BASE => 'اینترنتی',
-                \aminkt\payment\models\TransactionSession::TYPE_CART_TO_CART => 'کارت به کارت',
+                \aminkt\yii2\payment\models\TransactionSession::TYPE_WEB_BASE => 'اینترنتی',
+                \aminkt\yii2\payment\models\TransactionSession::TYPE_CART_TO_CART => 'کارت به کارت',
             ],
         ],
         [
@@ -43,10 +43,10 @@ echo \yii\grid\GridView::widget([
                 return $model::getLabel($model->status, 'status');
             },
             'filter' => [
-                \aminkt\payment\models\TransactionSession::STATUS_NOT_PAID => 'پرداخت نشده',
-                \aminkt\payment\models\TransactionSession::STATUS_PAID => 'پرداخت شده',
-                \aminkt\payment\models\TransactionSession::STATUS_FAILED => 'ناموفق',
-                \aminkt\payment\models\TransactionSession::STATUS_INQUIRY_PROBLEM => 'مغایرت بانکی',
+                \aminkt\yii2\payment\models\TransactionSession::STATUS_NOT_PAID => 'پرداخت نشده',
+                \aminkt\yii2\payment\models\TransactionSession::STATUS_PAID => 'پرداخت شده',
+                \aminkt\yii2\payment\models\TransactionSession::STATUS_FAILED => 'ناموفق',
+                \aminkt\yii2\payment\models\TransactionSession::STATUS_INQUIRY_PROBLEM => 'مغایرت بانکی',
             ],
         ],
         [

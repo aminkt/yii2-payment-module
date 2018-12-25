@@ -1,6 +1,6 @@
 <?php
 
-namespace aminkt\exceptions;
+namespace aminkt\yii2\payment\exceptions;
 
 use Throwable;
 

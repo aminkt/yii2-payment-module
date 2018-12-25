@@ -1,8 +1,8 @@
 <?php
 
-namespace aminkt\payment\controllers\backend;
+namespace aminkt\yii2\payment\controllers\backend;
 
-use aminkt\payment\models\search\TransactionSessionSearch;
+use aminkt\yii2\payment\models\search\TransactionSessionSearch;
 use yii\web\Controller;
 
 /**

@@ -1,27 +1,16 @@
 How to install this module:
 
-Step1: First add flowing codes into project `composer.json`
-
-```
-"repositories": [
-    {
-        "type": "gitlab",
-        "url": "https://gitlab.com/aminkt/yii2-payment-module"
-    }
-],
-```
-
-Then add flowing line to require part of `composer.json` :
+Step1: Add flowing line to require part of `composer.json` :
 ```
 "aminkt/yii2-payment-module": "*",
 ```
 
-And after that run bellow command in your composer :
+Or run bellow command  :
 ```
-Composer update aminkt/yii2-payment-module
+composer require aminkt/yii2-payment-module
 ```
 
-Step3: Add flowing lines in your application backend config:
+Step2: Add flowing lines in your application backend config:
 
 ```php
 'payment' => [
@@ -30,7 +19,7 @@ Step3: Add flowing lines in your application backend config:
 ],
 ```
 
-Step4: Add flowing lines in your application frontend config:
+Step3: Add flowing lines in your application frontend config:
 
 ```php
 'payment' => [

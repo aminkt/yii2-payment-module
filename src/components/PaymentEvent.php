@@ -1,10 +1,10 @@
 <?php
 
-namespace aminkt\payment\components;
+namespace aminkt\yii2\payment\components;
 
 
-use aminkt\payment\lib\AbstractGate;
-use aminkt\payment\models\TransactionInquiry;
+use aminkt\yii2\payment\lib\AbstractGate;
+use aminkt\yii2\payment\models\TransactionInquiry;
 use yii\base\Event;
 
 /**

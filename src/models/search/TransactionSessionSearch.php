@@ -6,10 +6,10 @@
  * Time: 10:26 AM
  */
 
-namespace aminkt\payment\models\search;
+namespace aminkt\yii2\payment\models\search;
 
 
-use aminkt\payment\models\TransactionSession;
+use aminkt\yii2\payment\models\TransactionSession;
 use yii\data\ActiveDataProvider;
 
 /**

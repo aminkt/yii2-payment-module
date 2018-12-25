@@ -1,8 +1,8 @@
 <?php
 
-namespace aminkt\payment\controllers\frontend;
+namespace aminkt\yii2\payment\controllers\frontend;
 
-use aminkt\payment\Payment;
+use aminkt\yii2\payment\Payment;
 use yii\web\Controller;
 
 /**
@@ -36,7 +36,7 @@ class DefaultController extends Controller
      * @return string
      */
     public function actionSend(){
-        $data = \Yii::$app->getSession()->get(\aminkt\payment\components\Payment::SESSION_NAME_OF_BANK_POST_DATA);
+        $data = \Yii::$app->getSession()->get(\aminkt\yii2\payment\components\Payment::SESSION_NAME_OF_BANK_POST_DATA);
         $data = json_decode($data, true);
         if (is_array($data) and array_key_exists('redirect', $data) and isset($data['redirect'])) {
             return $this->redirect($data['redirect']);

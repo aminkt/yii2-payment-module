@@ -5,7 +5,7 @@ return [
             'class' => 'aminkt\payment\components\Payment',
             'callback' => ['/payment/default/verify'],
             'gates'=>[
-                \aminkt\payment\lib\Sep::$gateId => [
+                \aminkt\yii2\payment\lib\Sep::$gateId => [
                     'class' => \aminkt\payment\lib\Sep::className(),
                     'identityData' => [
                         'MID' => '******',
@@ -14,7 +14,7 @@ return [
                         'webService' => "https://sep.shaparak.ir/payments/referencepayment.asmx?WSDL",
                     ]
                 ],
-                \aminkt\payment\lib\MellatGate::$gateId => [
+                \aminkt\yii2\payment\lib\MellatGate::$gateId => [
                     'class' => \aminkt\payment\lib\MellatGate::className(),
                     'identityData'=>[
                         'terminalId' => '***',

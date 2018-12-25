@@ -1,6 +1,6 @@
 <?php
 
-namespace aminkt\payment\models;
+namespace aminkt\yii2\payment\models;
 
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;

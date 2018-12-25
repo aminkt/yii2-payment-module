@@ -1,8 +1,8 @@
 <?php
 
-namespace aminkt\payment\lib;
+namespace aminkt\yii2\payment\lib;
 
-use aminkt\payment\components\Payment;
+use aminkt\yii2\payment\components\Payment;
 use yii\httpclient\Client;
 
 /**

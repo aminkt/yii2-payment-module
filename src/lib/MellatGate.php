@@ -1,9 +1,9 @@
 <?php
 
-namespace aminkt\payment\lib;
+namespace aminkt\yii2\payment\lib;
 
-use aminkt\payment\exceptions\ConnectionException;
-use aminkt\payment\exceptions\VerifyPaymentException;
+use aminkt\yii2\payment\exceptions\ConnectionException;
+use aminkt\yii2\payment\exceptions\VerifyPaymentException;
 use SoapClient;
 use SoapFault;
 
