@@ -12,8 +12,8 @@ class m171130_153244_fix_orderid_col_in_transaction_session extends Migration
      */
     public function safeUp()
     {
-        $this->alterColumn('{{%transaction_sessions}}', 'orderId', $this->string()->notNull());
-        $this->createIndex('transactionSession_orderId_index', '{{%transaction_sessions}}', 'orderId', false);
+        $this->alterColumn('{{%transaction_sessions}}', 'order_id', $this->string()->notNull());
+        $this->createIndex('transactionSession_orderId_index', '{{%transaction_sessions}}', 'order_id', false);
     }
 
     /**
@@ -22,6 +22,6 @@ class m171130_153244_fix_orderid_col_in_transaction_session extends Migration
     public function safeDown()
     {
         $this->dropIndex('transactionSession_orderId_index', '{{%transaction_sessions}}');
-        $this->alterColumn('{{%transaction_sessions}}', 'orderId', $this->integer()->notNull());
+        $this->alterColumn('{{%transaction_sessions}}', 'order_id', $this->integer()->notNull());
     }
 }
