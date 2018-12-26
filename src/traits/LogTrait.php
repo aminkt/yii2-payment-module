@@ -64,9 +64,9 @@ trait LogTrait
         /**
          * Update transactionSession data.
          */
-        $transactionSession->userCardHash = $gate->getCardHash();
-        $transactionSession->userCardPan = $gate->getCardPan();
-        $transactionSession->trackingCode = $gate->getTrackingCode();
+        $transactionSession->user_card_hash = $gate->getCardHash();
+        $transactionSession->user_card_pan = $gate->getCardPan();
+        $transactionSession->tracking_code = $gate->getTrackingCode();
         if ($gate->getStatus()) {
             $transactionSession->status = TransactionSession::STATUS_PAID;
         } else {
@@ -81,7 +81,7 @@ trait LogTrait
              * Create an inquiry request for valid payments.
              */
             $inquiryRequest = new TransactionInquiry();
-            $inquiryRequest->sessionId = $transactionSession->id;
+            $inquiryRequest->session_id = $transactionSession->id;
             $inquiryRequest->status = TransactionInquiry::STATUS_INQUIRY_WAITING;
             $inquiryRequest->save(false);
         }
@@ -93,7 +93,7 @@ trait LogTrait
         $event->setGate($gate)
             ->setStatus($gate->getStatus())
             ->setTransactionSession($transactionSession);
-        \Yii::$app->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_VERIFY, $event);
+        \Yii::$app->trigger(\aminkt\yii2\payment\Payment::AFTER_PAYMENT_VERIFY, $event);
         return true;
     }
 
@@ -151,9 +151,9 @@ trait LogTrait
         // Create transaction session data.
         $transactionSession = new TransactionSession([
             'authority' => $gate->getAuthority(),
-            'order_id' => $gate->getOrderId(),
+            'order_id' => $order->getId(),
             'psp' => $gate::className(),
-            'amount' => $order->getPayAmount(),
+            'amount' => $gate->getAmount(),
             'description' => Html::encode($description),
             'status' => TransactionSession::STATUS_NOT_PAID,
             'type' => TransactionSession::TYPE_WEB_BASE,

@@ -3,7 +3,6 @@
 namespace aminkt\yii2\payment\gates;
 
 use aminkt\yii2\payment\models\TransactionSession;
-use Faker\Provider\Payment;
 use yii\base\Component;
 use yii\helpers\Inflector;
 
@@ -44,7 +43,16 @@ abstract class AbstractGate extends Component
      *
      * @return boolean
      */
-    public abstract function dispatchRequest();
+    public function dispatchRequest()
+    {
+        if (\aminkt\yii2\payment\Payment::getInstance()->enableByPass() and $_POST['byPassReq']) {
+            $this->setOrderId($_POST['orderId'])
+                ->setAmount($_POST['amount']);
+
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Prepare data and config gate for payment.
@@ -188,16 +196,19 @@ abstract class AbstractGate extends Component
     {
         $minAllowedPrice = \aminkt\yii2\payment\Payment::getInstance()->minAmount;
         $maxAllowedPrice = \aminkt\yii2\payment\Payment::getInstance()->maxAmount;
+
+        $amount = (integer) $amount;
         if (is_int($amount) and $amount >= $minAllowedPrice) {
             if (!$maxAllowedPrice) {
                 $this->amount = $amount;
-            } elseif ($maxAllowedPrice <= $amount) {
+                return $this;
+            } elseif ($maxAllowedPrice >= $amount) {
                 $this->amount = $amount;
+                return $this;
             }
-            return $this;
         }
 
-        throw new \InvalidArgumentException("Amount should be a numeric value and be grater than 100 in IR Toman");
+        throw new \InvalidArgumentException("Amount should be a numeric value and be grater than $minAllowedPrice in IR Toman");
     }
 
     /**
@@ -205,8 +216,8 @@ abstract class AbstractGate extends Component
      */
     public function getAuthority()
     {
-        if(\aminkt\yii2\payment\Payment::getInstance()->enableByPass()) {
-            return "000TestAuth";
+        if (\aminkt\yii2\payment\Payment::getInstance()->enableByPass()) {
+            return "000TestAuth" . $this->getOrderId();
         }
         return $this->authority;
     }
@@ -331,7 +342,7 @@ abstract class AbstractGate extends Component
      */
     public function getTransactionModel()
     {
-        $session = TransactionSession::findOne($this->getOrderId(false));
+        $session = TransactionSession::findOne($this->getOrderId());
         if ($session)
             return $session;
         \Yii::warning("Transaction session model not found.");
@@ -349,9 +360,10 @@ abstract class AbstractGate extends Component
      */
     public function getOrderId()
     {
-        $isBypassEnable = \aminkt\yii2\payment\Payment::getInstance()->enableByPass;
-        if (YII_ENV_DEV and $isBypassEnable)
-            return $this->orderId . '000';
+        $isBypassEnable = \aminkt\yii2\payment\Payment::getInstance()->enableByPass();
+        if ($isBypassEnable) {
+            return '000'.$this->orderId;
+        }
         return $this->orderId;
     }
 
@@ -366,10 +378,6 @@ abstract class AbstractGate extends Component
      */
     public function setOrderId($orderId)
     {
-        $isBypassEnable = \aminkt\yii2\payment\Payment::getInstance()->enableByPass;
-        if (YII_ENV_DEV and $isBypassEnable) {
-            $orderId = str_replace('000', '', $orderId);
-        }
         $this->orderId = $orderId;
         return $this;
     }

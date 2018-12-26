@@ -3,11 +3,12 @@
 namespace aminkt\yii2\payment\components;
 
 use aminkt\exceptions\RequestPaymentException;
-use aminkt\yii2\payment\exceptions\ConnectionException;
-use aminkt\yii2\payment\exceptions\SecurityException;
-use aminkt\yii2\payment\exceptions\VerifyPaymentException;
+use aminkt\exceptions\ConnectionException;
+use aminkt\exceptions\SecurityException;
+use aminkt\exceptions\VerifyPaymentException;
 use aminkt\yii2\payment\gates\AbstractGate;
 use aminkt\yii2\payment\InvalidAmountException;
+use aminkt\yii2\payment\models\TransactionSession;
 use aminkt\yii2\payment\traits\LogTrait;
 use aminkt\yii2\payment\traits\SecurityTrait;
 use yii\base\Component;
@@ -109,7 +110,6 @@ class Payment extends Component
         }
 
         $this->enableByPass = \aminkt\yii2\payment\Payment::getInstance()->enableByPass();
-
     }
 
     /**
@@ -148,6 +148,7 @@ class Payment extends Component
                         ->setAmount($order->getPayAmount())
                         ->setCallbackUrl($this->callback);
 
+
                     // Save session data.
                     $session = $this->savePaymentDataIntoDatabase($gateObj, $order, $description);
 
@@ -167,7 +168,7 @@ class Payment extends Component
                             $data = [
                                 'action' => $gateObj->getCallbackUrl(),
                                 'method' => 'POST',
-                                'input' => [
+                                'inputs' => [
                                     'amount' => $gateObj->getAmount(),
                                     'orderId' => $gateObj->getOrderId(),
                                     'byPassReq' => true,
@@ -284,11 +285,15 @@ HTML;
                         }
 
                         \Yii::$app->getCache()->set($locVerifyCacheName, true);
-                        $verify = $gateObject->verifyTransaction();
+
+                        if(!$this->enableByPass) {
+                            $verify = $gateObject->verifyTransaction();
+                        }
+
                         $this->saveVerifyDataIntoDatabase($gateObject);
-                        if ($verify) {
+                        if ($this->enableByPass or $verify) {
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
-                            return $verify;
+                            return true;
                         }
                         \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\aminkt\exceptions\SecurityException $exception) {

@@ -33,6 +33,10 @@ class ZarinPal extends AbstractGate
      */
     public function dispatchRequest()
     {
+        if (parent::dispatchRequest()) {
+            return true;
+        }
+
         $this->setOrderId($_GET['oi']);
         if (isset($_GET['Authority'])) {
             $this->setAuthority($_GET['Authority']);

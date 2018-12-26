@@ -220,7 +220,7 @@ trait SecurityTrait
 
         if ($payload) {
             $payload = base64_decode($payload);
-            $payload = json_decode($payload);
+            $payload = json_decode($payload, true);
 
             if (isset($payload['expire_in']) and time() > $payload['expire_in']) {
                 throw new SecurityException("Token expired.");

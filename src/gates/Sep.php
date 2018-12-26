@@ -118,6 +118,10 @@ class Sep extends AbstractGate
      */
     public function dispatchRequest()
     {
+        if (parent::dispatchRequest()) {
+            return true;
+        }
+
         $this->stateCode = $_POST['StateCode'];
         $this->state = $_POST['State'];
         $this->setOrderId($_POST['ResNum']);

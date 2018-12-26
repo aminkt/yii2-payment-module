@@ -81,7 +81,7 @@ class Payment extends \yii\base\Module
      * @author Amin Keshavarz <ak_1596@yahoo.com>
      */
     public function enableByPass() {
-        return $this->enableByPass and YII_ENV_TEST;
+        return $this->enableByPass and YII_ENV_DEV;
     }
 
     /**
