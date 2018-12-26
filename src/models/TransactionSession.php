@@ -82,31 +82,6 @@ class TransactionSession extends ActiveRecord
     }
 
     /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'order_id' => 'شناسه سفارش',
-            'authority' => 'شناسه پرداخت',
-            'psp' => 'نام درگاه',
-            'amount' => 'مبلغ',
-            'tracking_code' => 'کد پیگیری',
-            'description' => 'توضیحات',
-            'note' => 'یادآوری',
-            'status' => 'وضعیت',
-            'type' => 'نوع پرداخت',
-            'user_card_pan' => 'شماره کارت مشتری',
-            'user_card_hash' => 'هش کارت مشتری',
-            'user_mobile' => 'تلفن مشتری',
-            'ip' => 'Ip',
-            'updated_at' => 'تاریخ ویرایش',
-            'created_at' => 'تاریخ ایجاد',
-        ];
-    }
-
-    /**
      * @return \yii\db\ActiveQuery
      */
     public function getLogs()

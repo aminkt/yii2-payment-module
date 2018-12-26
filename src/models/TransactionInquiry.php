@@ -10,13 +10,13 @@ use yii\db\Expression;
  * This is the model class for table "{{%transaction_inquiries}}".
  *
  * @property integer $id
- * @property integer $sessionId
+ * @property integer $session_id
  * @property integer $status
  * @property string $description
- * @property string $updateAt
- * @property string $createAt
+ * @property string $updated_at
+ * @property string $created_at
  *
- * @property \aminkt\payment\models\TransactionSession $transactionSession
+ * @property \aminkt\yii2\payment\models\TransactionSession $transactionSession
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  */
@@ -32,8 +32,8 @@ class TransactionInquiry extends ActiveRecord
             [
                 'class' => TimestampBehavior::className(),
                 'attributes' => [
-                    ActiveRecord::EVENT_BEFORE_INSERT => ['updateAt', 'createAt'],
-                    ActiveRecord::EVENT_BEFORE_UPDATE => ['updateAt'],
+                    ActiveRecord::EVENT_BEFORE_INSERT => ['updated_at', 'created_at'],
+                    ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_at'],
                 ],
                 // if you're using datetime instead of UNIX timestamp:
                 'value' => new Expression('NOW()'),
@@ -55,25 +55,10 @@ class TransactionInquiry extends ActiveRecord
     public function rules()
     {
         return [
-            [['sessionId'], 'required'],
-            [['sessionId', 'status'], 'integer'],
+            [['session_id'], 'required'],
+            [['session_id', 'status'], 'integer'],
             [['description'], 'string'],
-            [['updateAt', 'createAt'], 'safe'],
-        ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'sessionId' => 'Session ID',
-            'status' => 'Status',
-            'description' => 'Description',
-            'updateAt' => 'Update At',
-            'createAt' => 'Create At',
+            [['updated_at', 'created_at'], 'safe'],
         ];
     }
 
@@ -82,6 +67,6 @@ class TransactionInquiry extends ActiveRecord
      */
     public function getTransactionSession()
     {
-        return $this->hasOne(TransactionSession::className(), ['id' => 'sessionId']);
+        return $this->hasOne(TransactionSession::className(), ['id' => 'session_id']);
     }
 }

@@ -6,7 +6,7 @@ use yii\base\InvalidConfigException;
 /**
  * Payment module definition class
  *
- * @property \aminkt\payment\components\Payment $payment    Payment component.
+ * @property \aminkt\yii2\payment\components\Payment $payment    Payment component.
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  * @package aminkt\payment
@@ -56,6 +56,13 @@ class Payment extends \yii\base\Module
     public $controllerNamespace = 'aminkt\payment\controllers\frontend';
 
     /**
+     * Enable by pass action to test payment in your app.
+     *
+     * @var bool
+     */
+    public $enableByPass = false;
+
+    /**
      * @inheritdoc
      */
     public function init()
@@ -64,14 +71,17 @@ class Payment extends \yii\base\Module
         if(!$this->orderClass) {
             throw new InvalidConfigException("Order calss should define.");
         }
+    }
 
-        // initialize the module with the configuration loaded from config.php
-        $config = require(__DIR__ . '/config.php');
-        if ($this->paymentComponentConfiguration) {
-            $config['components']['payment'] = $this->paymentComponentConfiguration;
-        }
-
-        \Yii::configure($this, $config);
+    /**
+     * Check by pass enabled or not.
+     *
+     * @return bool
+     *
+     * @author Amin Keshavarz <ak_1596@yahoo.com>
+     */
+    public function enableByPass() {
+        return $this->enableByPass and YII_ENV_TEST;
     }
 
     /**

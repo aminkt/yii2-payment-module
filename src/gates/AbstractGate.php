@@ -205,6 +205,9 @@ abstract class AbstractGate extends Component
      */
     public function getAuthority()
     {
+        if(\aminkt\yii2\payment\Payment::getInstance()->enableByPass()) {
+            return "000TestAuth";
+        }
         return $this->authority;
     }
 
@@ -338,26 +341,33 @@ abstract class AbstractGate extends Component
     /**
      * Return order id.
      *
-     * @param bool $test Second value that define you should return test data. be care full that application should in
-     *                   test env to get test data.
+     * Be care full. If application be in dev env and bypass is enabled test data will return.
+     *
+     * @param bool $test
      *
      * @return string
      */
-    public function getOrderId($test = true)
+    public function getOrderId()
     {
-        if (YII_ENV_DEV and $test)
+        $isBypassEnable = \aminkt\yii2\payment\Payment::getInstance()->enableByPass;
+        if (YII_ENV_DEV and $isBypassEnable)
             return $this->orderId . '000';
         return $this->orderId;
     }
 
     /**
+     * Set order id.
+     *
+     * If application env is dev and bypass enabled in module test data will set.
+     *
      * @param string $orderId
      *
      * @return $this
      */
     public function setOrderId($orderId)
     {
-        if (YII_ENV_DEV) {
+        $isBypassEnable = \aminkt\yii2\payment\Payment::getInstance()->enableByPass;
+        if (YII_ENV_DEV and $isBypassEnable) {
             $orderId = str_replace('000', '', $orderId);
         }
         $this->orderId = $orderId;

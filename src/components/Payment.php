@@ -28,10 +28,10 @@ class Payment extends Component
     use SecurityTrait;
     use LogTrait;
 
-    const COOKIE_PAYMENT_BLOCKED = "payment_block_service";
-    const COOKIE_PAYMENT_MUCH_ERROR = "payment_much_errors";
+    const CACHE_PAYMENT_BLOCKED = "payment.block.user";
+    const CACHE_PAYMENT_BLOCK_ERRORS_COUNT = "payment.block.errors.count";
 
-    const CACHE_LOC_VERIFY_PROCESS = "verify_process_locking";
+    const CACHE_LOC_VERIFY_PROCESS = "payment.verify.locking";
 
     const ERROR_ALL_GATES_IS_BUSY = 1;
     const ERROR_USER_BLOCKED = 2;
@@ -60,12 +60,35 @@ class Payment extends Component
     public $bankTimeout;
 
     /**
+     * Block time. this value define if a user blocked how much should prevent action from that.
+     * If set null for ever considred.
+     * Value should be in second. default value is 86400 mean 1 day.
+     *
+     * @var integer
+     */
+    public $blockTime = 86400;
+
+    /**
+     * Max alowed times that a user can has credential errors.
+     * Default value is 5 times. after that user will block.
+     * @var int
+     */
+    public $alowedCredentialErrors = 5;
+
+    /**
      * Define callback address.
      * This address used to redirect user to that when bank redirect user to site.
      *
      * @var array $callbackUrl array for show router of callback
      */
     public $callback = ['/payment/default/verify'];
+
+    /**
+     * Enable by pass.
+     *
+     * @var bool
+     */
+    protected $enableByPass = false;
 
 
     /**
@@ -81,9 +104,11 @@ class Payment extends Component
             throw new InvalidCallException("Gates value is not correct.");
         }
 
-        if(!is_array($this->callback) and !(count($this->callback) > 0)) {
+        if (!is_array($this->callback) and !(count($this->callback) > 0)) {
             throw new InvalidConfigException("Callback is required.");
         }
+
+        $this->enableByPass = \aminkt\yii2\payment\Payment::getInstance()->enableByPass();
 
     }
 
@@ -124,17 +149,33 @@ class Payment extends Component
                         ->setCallbackUrl($this->callback);
 
                     // Save session data.
-                    $session = $this->savePaymentDataIntoDatabase($gateObj, $order->getId(), $description);
+                    $session = $this->savePaymentDataIntoDatabase($gateObj, $order, $description);
 
                     $gateObj->setOrderId($session->id);
 
-                    if ($payRequest = $gateObj->payRequest()) {
+                    if(!$this->enableByPass) {
+                        $payRequest = $gateObj->payRequest();
+                    }
 
-                        if ($payRequest->getAuthority()) {
+                    if ($this->enableByPass or $payRequest) {
+
+                        if ($gateObj->getAuthority()) {
                             $this->updatePaymentDataInDatabase($session, 'authority', $gateObj->getAuthority());
                         }
 
-                        $data = $gateObj->redirectToBankFormData();
+                        if($this->enableByPass) {
+                            $data = [
+                                'action' => $gateObj->getCallbackUrl(),
+                                'method' => 'POST',
+                                'input' => [
+                                    'amount' => $gateObj->getAmount(),
+                                    'orderId' => $gateObj->getOrderId(),
+                                    'byPassReq' => true,
+                                ]
+                            ];
+                        } else {
+                            $data = $gateObj->redirectToBankFormData();
+                        }
 
                         return $this->redirect($data['action'], $data['inputs'], $data['method']);
                     } else {
@@ -227,72 +268,35 @@ HTML;
                         $gateObject->dispatchRequest();
 
                         $session = $gateObject->getTransactionModel();
+
                         if (!$session) {
                             throw new NotFoundHttpException("Session not found.");
                         }
                         if ($session->status == $session::STATUS_PAID) {
                             throw new SecurityException("This order paid before.");
                         }
-                        self::$currentGateObject->setAmount($session->amount);
 
-                        $locVerifyCacheName = self::CACHE_LOC_VERIFY_PROCESS . '.' . self::$currentGateObject->getOrderId(false);
+                        $gateObject->setAmount($session->amount);
+
+                        $locVerifyCacheName = self::CACHE_LOC_VERIFY_PROCESS . '.' . $gateObject->getOrderId();
                         while (\Yii::$app->getCache()->exists($locVerifyCacheName) and !YII_ENV_DEV) {
                             // Wait for running verify request.
                         }
 
                         \Yii::$app->getCache()->set($locVerifyCacheName, true);
-                        $verify = self::$currentGateObject->verifyTransaction();
-                        $this->saveVerifyDataIntoDatabase(self::$currentGateObject);
+                        $verify = $gateObject->verifyTransaction();
+                        $this->saveVerifyDataIntoDatabase($gateObject);
                         if ($verify) {
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
                             return $verify;
                         }
                         \Yii::$app->getCache()->delete($locVerifyCacheName);
-                    } catch (NotFoundHttpException $exception) {
-                        \Yii::error("Gate verify become failed.", self::className());
-                        \Yii::error($exception->getMessage(), self::className());
-                        \Yii::error($exception->getTrace(), self::className());
-                        throw $exception;
-                    } catch (VerifyPaymentException $exception) {
-                        \Yii::error("Gate verify become failed.", self::className());
-                        \Yii::error($exception->getMessage(), self::className());
-                        \Yii::error($exception->getTrace(), self::className());
-                        if (isset($locVerifyCacheName))
-                            \Yii::$app->getCache()->delete($locVerifyCacheName);
-                    } catch (SecurityException $exception) {
-                        \Yii::error("Gate have security error.", self::className());
-                        \Yii::error($exception->getMessage(), self::className());
-                        \Yii::error($exception->getTrace(), self::className());
-                        if (isset($locVerifyCacheName))
-                            \Yii::$app->getCache()->delete($locVerifyCacheName);
-                    } catch (ConnectionException $exception) {
-                        \Yii::error("Gate not available now.", self::className());
-                        \Yii::error($exception->getMessage(), self::className());
-                        \Yii::error($exception->getTrace(), self::className());
-                        if (isset($locVerifyCacheName))
-                            \Yii::$app->getCache()->delete($locVerifyCacheName);
-                    } catch (\RuntimeException $exception) {
-                        \Yii::error("Gate has problem in verify payment.", self::className());
-                        \Yii::error($exception->getMessage(), self::className());
-                        \Yii::error($exception->getTrace(), self::className());
-                        if (isset($locVerifyCacheName))
-                            \Yii::$app->getCache()->delete($locVerifyCacheName);
-                    } catch (\Exception $exception) {
-                        \Yii::error("Gate has a hard error while trying to verify payment request.", self::className());
-                        \Yii::error($exception->getMessage(), self::className());
-                        \Yii::error($exception->getTrace(), self::className());
-                        if (isset($locVerifyCacheName))
-                            \Yii::$app->getCache()->delete($locVerifyCacheName);
+                    } catch (\aminkt\exceptions\SecurityException $exception) {
+                        \Yii::error("Try to duble spending");
                         throw $exception;
                     }
-                } else {
-                    static::addError("Security error when try to tracking payment.\nDefined PSP is not valid.", 111, true);
                 }
-            } else {
-                static::addError("Security error when try to tracking payment.", 111, true);
             }
-        } else {
-            static::addError("User blocked and services is not available right now.", 112);
         }
         return false;
     }
@@ -300,7 +304,7 @@ HTML;
     /**
      * Inquiry request
      *
-     * @param TransactionInquiry $transactionInquiry
+     * @param \aminkt\yii2\payment\models\TransactionInquiry $transactionInquiry
      *
      * @throws \Exception
      *
@@ -308,10 +312,12 @@ HTML;
      */
     public function inquiry($transactionInquiry)
     {
+        throw new \RuntimeException("This class implemention is not done yet");
         try {
             $transactionSession = $transactionInquiry->transactionSession;
             /** @var AbstractGate $gateObject */
-            $gateObject = new $transactionSession->psp();
+            $gateClassName = $transactionSession->psp;
+            $gateObject = new $gateClassName();
             $gateConfig = $this->gates[$gateObject::$gateId];
             $gateObject->setIdentityData($gateConfig['identityData']);
 

@@ -3,9 +3,12 @@
 
 namespace aminkt\yii2\payment\traits;
 
+use aminkt\exceptions\SecurityException;
 use aminkt\yii2\payment\models\TransactionInquiry;
 use aminkt\yii2\payment\models\TransactionLog;
 use aminkt\yii2\payment\models\TransactionSession;
+use \yii\helpers\Html;
+use aminkt\yii2\payment\components\PaymentEvent;
 
 /**
  * Trait LogTrait
@@ -33,7 +36,7 @@ trait LogTrait
     /**
      * Save transaction data in db when verify request send and return true if its work correctly.
      *
-     * @param $gate AbstractGate
+     * @param \aminkt\yii2\payment\gates\AbstractGate   $gate
      *
      * @throws \aminkt\payment\exceptions\SecurityException
      *
@@ -44,7 +47,7 @@ trait LogTrait
         /**
          * Throw an verify event. can be used in kernel to save and modify transactions.
          */
-        $transactionSession = TransactionSession::findOne($gate->getOrderId(false));
+        $transactionSession = TransactionSession::findOne($gate->getOrderId());
 
         /**
          * Save transactions logs.
@@ -56,8 +59,6 @@ trait LogTrait
          */
         if ($transactionSession->status == TransactionSession::STATUS_PAID) {
             throw new SecurityException("This transaction paid before.");
-            // or return false and track in verify method.
-            return false;
         }
 
         /**
@@ -196,13 +197,14 @@ trait LogTrait
      */
     public static function saveLogData($transactionSession, $gate, $status = TransactionLog::STATUS_UNKNOWN)
     {
-        $log = new TransactionLog();
-        $log->sessionId = $transactionSession->id;
-        $log->bankDriver = $gate::className();
-        $log->status = $status;
-        $log->request = json_encode($gate->getRequest());
-        $log->response = json_encode($gate->getResponse());
-        $log->ip = \Yii::$app->getRequest()->getUserIP();
+        $log = new TransactionLog([
+            'session_id' => $transactionSession->id,
+            'bank_driver' => $gate::className(),
+            'status' => $status,
+            'request' => json_encode($gate->getRequest()),
+            'response' => json_encode($gate->getResponse()),
+            'ip' => \Yii::$app->getRequest()->getUserIP(),
+        ]);
         $log->save(false);
     }
 

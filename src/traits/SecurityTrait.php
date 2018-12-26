@@ -2,6 +2,7 @@
 
 
 namespace aminkt\yii2\payment\traits;
+
 use aminkt\exceptions\SecurityException;
 
 /**
@@ -18,73 +19,6 @@ use aminkt\exceptions\SecurityException;
 trait SecurityTrait
 {
 
-
-    /**
-     * Generate and set payment token.
-     *
-     * @return string
-     */
-    public static function generatePaymentToken()
-    {
-        $token = \Yii::$app->getSecurity()->generateRandomString(10);
-        \Yii::$app->getSession()->set(self::SESSION_NAME_OF_TOKEN, $token);
-        return $token;
-    }
-
-    /**
-     * Encrypt bank name to define correct gate in callback.
-     *
-     * @param $bankName
-     *
-     * @return string
-     */
-    public static function encryptBankName($bankName)
-    {
-        return $bankName;
-    }
-
-    /**
-     * Check if customer is blocked because of bad behaviors or not.
-     *
-     * @return bool
-     */
-    public static function isBlocked()
-    {
-        $cookiesRequest = \Yii::$app->request->cookies;
-        if ($cookiesRequest->has(static::COOKIE_PAYMENT_BLOCKED)) {
-            return true;
-        }
-        if (static::getBlockCounter() >= 5) {
-            static::blockPaymentServices();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Return counter of block.
-     *
-     * @return integer
-     */
-    public static function getBlockCounter()
-    {
-        $cookiesRequest = \Yii::$app->request->cookies;
-        return $cookiesRequest->getValue(static::COOKIE_PAYMENT_MUCH_ERROR, 0);
-    }
-
-    /**
-     * Block user
-     */
-    public static function blockPaymentServices()
-    {
-        $cookiesResponse = \Yii::$app->response->cookies;
-        $cookiesResponse->add(new Cookie([
-            'name' => static::COOKIE_PAYMENT_BLOCKED,
-            'value' => static::getBlockCounter(),
-            'expire' => time() + 60 * 60 * 24
-        ]));
-    }
-
     /**
      * Add an error to error collection/
      *
@@ -92,7 +26,7 @@ trait SecurityTrait
      * @param int|string $code    string
      * @param bool       $countUpBlockCounter
      */
-    public static function addError($message, $code = 0, $countUpBlockCounter = false)
+    public function addError($message, $code = 0, $countUpBlockCounter = false)
     {
         \Yii::error($message, $code);
         static::$errors[] = [
@@ -100,27 +34,22 @@ trait SecurityTrait
             'code' => $code,
         ];
         if ($countUpBlockCounter) {
-            static::incrementBlockCounter();
+            $this->incrementBlockCounter();
         }
     }
 
     /**
      * Increment counter of block.
      */
-    public static function incrementBlockCounter()
+    public function incrementBlockCounter()
     {
-        if (YII_ENV_DEV)
+        if (YII_ENV_DEV or $this->enableByPass)
             return;
 
-        $cookiesResponse = \Yii::$app->response->cookies;
-        $cookiesRequest = \Yii::$app->request->cookies;
-        $counter = $cookiesRequest->getValue(static::COOKIE_PAYMENT_MUCH_ERROR, 0);
+        $counter = $this->getBlockCounter();
         $counter++;
-        $cookiesResponse->add(new Cookie([
-            'name' => static::COOKIE_PAYMENT_MUCH_ERROR,
-            'value' => $counter,
-            'expire' => time() + 60 * 60 * 3
-        ]));
+
+        \Yii::$app->getCache()->set($this->getBlockCounterKey(), $counter);
     }
 
     /**
@@ -128,27 +57,22 @@ trait SecurityTrait
      *
      * @param bool $resetBlockCounter
      */
-    public static function cleanErrors($resetBlockCounter = false)
+    public function cleanErrors($resetBlockCounter = false)
     {
         static::$errors = [];
         if ($resetBlockCounter) {
-            static::resetBlockCounter();
+            \Yii::$app->getCache()->delete($this->getBlockCounterKey());
         }
     }
 
     /**
      * Reset counter of block.
      */
-    public static function resetBlockCounter()
+    public function resetBlockCounter()
     {
-        $cookiesResponse = \Yii::$app->response->cookies;
-        $cookiesRequest = \Yii::$app->request->cookies;
-        if ($cookiesRequest->has(static::COOKIE_PAYMENT_MUCH_ERROR)) {
-            $cookiesResponse->add(new Cookie([
-                'name' => static::COOKIE_PAYMENT_MUCH_ERROR,
-                'value' => 0,
-                'expire' => time() + 60 * 60 * 3
-            ]));
+        $blockCounter = $this->getBlockCounter();
+        if ($blockCounter > 0) {
+            \Yii::$app->getCache()->delete($this->getBlockCounterKey());
         }
     }
 
@@ -163,17 +87,80 @@ trait SecurityTrait
     }
 
     /**
-     * Return security key.
+     * Check if customer is blocked because of bad behaviors or not.
      *
-     * @return string
+     * @return bool
      */
-    public function getSecureKey()
+    public function isBlocked()
     {
-        if ($this->encryptKey) {
-            return $this->encryptKey;
+        // Check if byPass enabled, shutdown block service.
+        if ($this->enableByPass) {
+            return false;
         }
 
-        throw new \aminkt\exceptions\SecurityException("Encrypt key is not valid.");
+        if (\Yii::$app->getCache()->exists($this->getBlockKey())) {
+            return true;
+        }
+        if ($this->getBlockCounter() >= $this->alowedCredentialErrors) {
+            $this->blockPaymentServices();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Return block key for every user.
+     *
+     * @return string
+     *
+     * @author Amin Keshavarz <ak_1596@yahoo.com>
+     */
+    public function getBlockKey()
+    {
+        $ip = \Yii::$app->getRequest()->getUserIP();
+        $key = base64_encode($ip);
+        return static::CACHE_PAYMENT_BLOCKED . "." . $key;
+    }
+
+    /**
+     * Return block counter cache key.
+     *
+     * @return string
+     *
+     * @author Amin Keshavarz <ak_1596@yahoo.com>
+     */
+    public function getBlockCounterKey() {
+        $ip = \Yii::$app->getRequest()->getUserIP();
+        $key = base64_encode($ip);
+        $key = static::CACHE_PAYMENT_BLOCK_ERRORS_COUNT . "." . $key;
+        return $key;
+    }
+
+    /**
+     * Return counter of block for one user..
+     *
+     * @return integer
+     */
+    public function getBlockCounter()
+    {
+        $count = \Yii::$app->getCache()->get($this->getBlockCounterKey());
+        if (!$count) {
+            return 0;
+        }
+        return $count;
+    }
+
+    /**
+     * Block user.
+     */
+    public function blockPaymentServices()
+    {
+        if ($this->blockTime) {
+            $blockTime = time() + $this->blockTime;
+        } else {
+            $blockTime = null;
+        }
+        \Yii::$app->getCache()->set($this->getBlockKey(), $this->getBlockCounter(), $blockTime);
     }
 
     /**
@@ -202,11 +189,24 @@ trait SecurityTrait
         return $token;
     }
 
+    /**
+     * Return security key.
+     *
+     * @return string
+     */
+    public function getSecureKey()
+    {
+        if ($this->encryptKey) {
+            return $this->encryptKey;
+        }
+
+        throw new \aminkt\exceptions\SecurityException("Encrypt key is not valid.");
+    }
 
     /**
      * Decrypt token and return bank class name.
      *
-     * @param string    $token  Bank token.
+     * @param string $token Bank token.
      *
      * @return string
      *
@@ -222,7 +222,7 @@ trait SecurityTrait
             $payload = base64_decode($payload);
             $payload = json_decode($payload);
 
-            if(isset($payload['expire_in']) and time() > $payload['expire_in']) {
+            if (isset($payload['expire_in']) and time() > $payload['expire_in']) {
                 throw new SecurityException("Token expired.");
             }
 
