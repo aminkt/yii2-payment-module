@@ -3,7 +3,6 @@
 namespace aminkt\yii2\payment\components;
 
 
-use aminkt\yii2\payment\lib\AbstractGate;
 use aminkt\yii2\payment\models\TransactionInquiry;
 use yii\base\Event;
 
@@ -57,13 +56,13 @@ class PaymentEvent extends Event
         return $this;
     }
 
-    /** @var  AbstractGate $gate */
+    /** @var  \aminkt\yii2\payment\gates\AbstractGate $gate */
     public $gate;
 
     /** @var  integer $time */
     public $time;
 
-    /** @var  \aminkt\payment\models\TransactionSession $transactionSession */
+    /** @var  \aminkt\yii2\payment\models\TransactionSession $transactionSession */
     public $transactionSession;
 
     public function init()
@@ -73,7 +72,7 @@ class PaymentEvent extends Event
     }
 
     /**
-     * @return AbstractGate
+     * @return \aminkt\yii2\payment\gates\AbstractGate
      */
     public function getGate()
     {
@@ -81,7 +80,7 @@ class PaymentEvent extends Event
     }
 
     /**
-     * @param AbstractGate $gate
+     * @param \aminkt\yii2\payment\gates\AbstractGate $gate
      * @return $this
      */
     public function setGate($gate)
@@ -91,7 +90,7 @@ class PaymentEvent extends Event
     }
 
     /**
-     * @return \aminkt\payment\models\TransactionSession
+     * @return \aminkt\yii2\payment\models\TransactionSession
      */
     public function getTransactionSession()
     {
@@ -99,7 +98,7 @@ class PaymentEvent extends Event
     }
 
     /**
-     * @param \aminkt\payment\models\TransactionSession $transactionSession
+     * @param \aminkt\yii2\payment\models\TransactionSession $transactionSession
      * @return $this
      */
     public function setTransactionSession($transactionSession)

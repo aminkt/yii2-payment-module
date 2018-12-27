@@ -48,7 +48,7 @@ class Payment extends Component
     /**
      * List of avilable gates.
      *
-     * @var  string[] $gates
+     * @var  array $gates
      */
     public $gates;
 
@@ -134,7 +134,7 @@ class Payment extends Component
      *
      * @throws \Exception
      *
-     * @return array|bool Return false if request become failed or Return an array that can be used to redirect user to
+     * @return bool Return false if request become failed or Return an array that can be used to redirect user to
      *                    bank gate way.
      */
     public function payRequest($order, $description = null)
@@ -155,10 +155,10 @@ class Payment extends Component
                     $gateObj->setOrderId($session->id);
 
                     if(!$this->enableByPass) {
-                        $payRequest = $gateObj->payRequest();
+                        $gateObj->connect()->payRequest();
                     }
 
-                    if ($this->enableByPass or $payRequest) {
+                    if ($this->enableByPass or $gateObj->getStatus()) {
 
                         if ($gateObj->getAuthority()) {
                             $this->updatePaymentDataInDatabase($session, 'authority', $gateObj->getAuthority());
@@ -178,7 +178,8 @@ class Payment extends Component
                             $data = $gateObj->redirectToBankFormData();
                         }
 
-                        return $this->redirect($data['action'], $data['inputs'], $data['method']);
+                        $this->redirect($data['action'], $data['inputs'], $data['method']);
+                        die();
                     } else {
                         throw new RequestPaymentException("Problem in payment request.");
                     }
@@ -203,7 +204,7 @@ class Payment extends Component
      *
      * @param array $config Gate config.
      *
-     * @return AbstractGate
+     * @return \aminkt\yii2\payment\gates\AbstractGate
      *
      * @author Amin Keshavarz <ak_1596@yahoo.com>
      */
@@ -211,7 +212,7 @@ class Payment extends Component
     {
         $class = $config['class'];
         $identityData = $config['identityData'];
-        /** @var AbstractGate $obj */
+        /** @var \aminkt\yii2\payment\gates\AbstractGate $obj */
         $obj = new $class();
         $obj->setIdentityData($identityData);
         return $obj;
@@ -287,11 +288,11 @@ HTML;
                         \Yii::$app->getCache()->set($locVerifyCacheName, true);
 
                         if(!$this->enableByPass) {
-                            $verify = $gateObject->verifyTransaction();
+                            $gateObject->verifyTransaction();
                         }
 
                         $this->saveVerifyDataIntoDatabase($gateObject);
-                        if ($this->enableByPass or $verify) {
+                        if ($this->enableByPass or $gateObject->getStatus()) {
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
                             return true;
                         }

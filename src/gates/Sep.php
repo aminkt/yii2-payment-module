@@ -2,8 +2,9 @@
 
 namespace aminkt\yii2\payment\gates;
 
-use aminkt\yii2\payment\exceptions\ConnectionException;
-use aminkt\yii2\payment\exceptions\VerifyPaymentException;
+use aminkt\exceptions\ConnectionException;
+use aminkt\exceptions\VerifyPaymentException;
+use aminkt\yii2\payment\interfaces\GateInterface;
 use SoapClient;
 use SoapFault;
 use yii\httpclient\Client;
@@ -24,12 +25,14 @@ class Sep extends AbstractGate
     protected $stateCode;
     protected $state;
     protected $request;
+    protected $status=false;
     private $soapProxy;
+
 
     /**
      * @inheritdoc
      */
-    public function payRequest()
+    public function connect(): GateInterface
     {
         $data = [
             'Amount' => $this->getAmount(),
@@ -49,15 +52,24 @@ class Sep extends AbstractGate
         \Yii::warning($this->getIdentityBankGatewayAddress());
         \Yii::warning($data);
         if ($this->response == '200') {
-            return true;
+            $this->status = true;
+            return $this;
         }
-        return true;
+        throw new ConnectionException("Can not connect to saman gate.");
     }
 
     /**
      * @inheritdoc
      */
-    public function redirectToBankFormData()
+    public function payRequest(): GateInterface
+    {
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function redirectToBankFormData(): array
     {
         $bankUrl = $this->getIdentityData('bankGatewayAddress');
         $data = [
@@ -78,8 +90,9 @@ class Sep extends AbstractGate
      * Verify Transaction if its paid. this method should call in callback from bank.
      * @return AbstractGate|boolean
      */
-    public function verifyTransaction()
+    public function verifyTransaction(): GateInterface
     {
+        $this->status = false;
         $status = $this->dispatchRequest();
 
         if (!$status) {
@@ -98,27 +111,26 @@ class Sep extends AbstractGate
             $this->response = $this->soapProxy->verifyTransaction($this->getAuthority(), $this->getIdentityData('MID'));
             \Yii::info("Amount of transaction: " . $this->getAmount());
             if ($this->response > 0 and $this->response == $this->getAmount()) {
+                $this->status = true;
                 return $this;
             } else {
                 throw new VerifyPaymentException("Verify transaction become failed because of $this->response code", $this->response);
             }
 
-            return false;
+            return $this;
         } catch (\Exception $e) {
             throw new VerifyPaymentException($e->getMessage(), $e->getCode(), $e);
         }
 
-        return false;
+        return $this;
     }
 
     /**
      * @inheritdoc
      */
-    public function dispatchRequest()
+    public function dispatchRequest(): bool
     {
-        if (parent::dispatchRequest()) {
-            return true;
-        }
+        parent::dispatchRequest();
 
         $this->stateCode = $_POST['StateCode'];
         $this->state = $_POST['State'];
@@ -138,10 +150,11 @@ class Sep extends AbstractGate
      * Return status of pay request, verify or inquiry request.
      * @return boolean
      */
-    public function getStatus()
+    public function getStatus():bool
     {
-        return $this->state == 'OK';
+        return ($this->state == 'OK' and $this->status === true);
     }
+
 
     private function connectToWebService()
     {
@@ -166,7 +179,7 @@ class Sep extends AbstractGate
      * Return bank requests as array.
      * @return array
      */
-    public function getRequest()
+    public function getRequest(): array
     {
         return $this->request;
     }
@@ -175,7 +188,7 @@ class Sep extends AbstractGate
      * Return bank response as array.
      * @return array
      */
-    public function getResponse()
+    public function getResponse(): array
     {
         return $this->response;
     }

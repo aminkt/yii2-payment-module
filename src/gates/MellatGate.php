@@ -207,7 +207,7 @@ class MellatGate extends AbstractGate
             throw new VerifyPaymentException($e->getMessage(), $e->getCode(), $e);
         }
 
-        return false;
+        return $this;
     }
 
     /**
@@ -240,7 +240,7 @@ class MellatGate extends AbstractGate
     /**
      * @inheritdoc
      */
-    public function inquiryTransaction()
+    public function inquiryTransaction(): GateInterface
     {
         parent::inquiryTransaction();
         try{
@@ -267,9 +267,9 @@ class MellatGate extends AbstractGate
                 $resCode = $res[0];
                 $this->statusCode = $resCode;
                 if($resCode == 0){
-                    return true;
+                    return $this;
                 } else {
-                    return false;
+                    return $this;
                 }
             } else
                 throw new \RuntimeException("Response not converted to array.", 2);
@@ -278,7 +278,7 @@ class MellatGate extends AbstractGate
         } catch (\Exception $e) {
             throw new ConnectionException($e->getMessage(), $e->getCode(), $e);
         }
-        return false;
+        return $this;
     }
 
     /**

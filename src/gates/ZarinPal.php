@@ -3,6 +3,7 @@
 namespace aminkt\yii2\payment\gates;
 
 use aminkt\yii2\payment\components\Payment;
+use aminkt\yii2\payment\interfaces\GateInterface;
 use yii\httpclient\Client;
 
 /**
@@ -19,10 +20,8 @@ use yii\httpclient\Client;
  */
 class ZarinPal extends AbstractGate
 {
-    public static $transBankName = 'ZatinPal';
-    public static $gateId = 'Zarin96';
-
     public $status = false;
+    public $statusCode;
     private $request;
     private $response;
 
@@ -31,11 +30,9 @@ class ZarinPal extends AbstractGate
      *
      * @return boolean
      */
-    public function dispatchRequest()
+    public function dispatchRequest(): bool
     {
-        if (parent::dispatchRequest()) {
-            return true;
-        }
+        parent::dispatchRequest();
 
         $this->setOrderId($_GET['oi']);
         if (isset($_GET['Authority'])) {
@@ -45,21 +42,27 @@ class ZarinPal extends AbstractGate
         return false;
     }
 
+
+
     /**
-     * Prepare data and config gate for payment.
-     *
-     * @throws \aminkt\payment\exceptions\ConnectionException   Connection failed.
-     *
-     * @return array|boolean
-     * Return data to redirect user to bank.
+     * @inheritdoc
      */
-    public function payRequest()
+    public function connect(): GateInterface
     {
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function payRequest(): GateInterface
+    {
+        $this->status = false;
         $data = [
             'MerchantID' => $this->getIdentityMerchantCode(),
             'Amount' => $this->getAmount(false),
             'CallbackURL' => $this->getCallbackUrl(),
-            'Description' => "خرید"
+            'Description' => "Buy"
         ];
 
         $this->request = $data;
@@ -78,14 +81,14 @@ class ZarinPal extends AbstractGate
         $response = json_decode($response->getContent(), true);
         $this->response = $response;
 
-        $this->status = $response['Status'];
+        $this->statusCode = $response['Status'];
 
         if (isset($response['Authority'])) {
+            $this->status = true;
             $this->setAuthority($response['Authority']);
-            return true;
         }
 
-        return false;
+        return $this;
     }
 
     /**
@@ -112,7 +115,7 @@ class ZarinPal extends AbstractGate
      *
      * @return array
      */
-    public function redirectToBankFormData()
+    public function redirectToBankFormData(): array
     {
         return [
             'redirect' => sprintf($this->getIdentityRedirectUrl(), $this->getAuthority())
@@ -120,15 +123,11 @@ class ZarinPal extends AbstractGate
     }
 
     /**
-     * Verify Transaction if its paid. this method should call in callback from bank.
-     *
-     * @throws \aminkt\payment\exceptions\VerifyPaymentException
-     * @throws \aminkt\payment\exceptions\ConnectionException
-     *
-     * @return AbstractGate|boolean
+     * @inheritdoc
      */
-    public function verifyTransaction()
+    public function verifyTransaction(): GateInterface
     {
+        $this->status = false;
         if ($this->dispatchRequest()) {
             $data = [
                 'MerchantID' => $this->getIdentityMerchantCode(),
@@ -152,14 +151,14 @@ class ZarinPal extends AbstractGate
             $response = json_decode($response->getContent(), true);
 
             $this->response = $response;
-            $this->status = $response['Status'];
+            $this->statusCode = $response['Status'];
 
             if ($this->status == 100 or $this->status == 101) {
+                $this->status = true;
                 $this->setTrackingCode($response['RefID']);
-                return $this;
             }
         }
-        return false;
+        return $this;
     }
 
     /**
@@ -167,7 +166,7 @@ class ZarinPal extends AbstractGate
      *
      * @return mixed
      */
-    public function getRequest()
+    public function getRequest(): array
     {
         return $this->request;
     }
@@ -177,7 +176,7 @@ class ZarinPal extends AbstractGate
      *
      * @return mixed
      */
-    public function getResponse()
+    public function getResponse(): array
     {
         return $this->response;
     }
@@ -187,22 +186,8 @@ class ZarinPal extends AbstractGate
      *
      * @return boolean
      */
-    public function getStatus()
+    public function getStatus(): bool
     {
-        return ($this->status == 100 or $this->status == 101);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function setCallbackUrl($callbackUrl)
-    {
-        $bank = Payment::encryptBankName(static::$gateId);
-        $token = Payment::generatePaymentToken();
-        $callbackUrl['bc'] = $bank;
-        $callbackUrl['token'] = $token;
-        $callbackUrl['oi'] = $this->getOrderId();
-        $this->callbackUrl = \Yii::$app->getUrlManager()->createAbsoluteUrl($callbackUrl);
-        return $this;
+        return ($this->status == 100 or $this->status == 101) and ($this->status === true);
     }
 }

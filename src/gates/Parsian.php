@@ -28,7 +28,7 @@ class Parsian extends AbstractGate
     private $token;
     private $terminalNumber;
 
-    private $status;
+    public $status;
     private $response = [];
     private $request = [];
 
@@ -60,10 +60,10 @@ class Parsian extends AbstractGate
 
             if ($result->SalePaymentRequestResult->Token && $result->SalePaymentRequestResult->Status === 0) {
                 $this->token = $result->SalePaymentRequestResult->Token;
-                $this->status = true;
+                $this->status = $result->SalePaymentRequestResult->Status;
                 return $this;
             } elseif ($result->SalePaymentRequestResult->Status != '0') {
-                $this->status = false;
+                $this->status = $result->SalePaymentRequestResult->Status;
                 $this->response['message'] = $result->SalePaymentRequestResult->Message;
                 \Yii::warning($result->SalePaymentRequestResult->Status, self::class);
                 \Yii::warning($result->SalePaymentRequestResult->Message, self::class);
@@ -84,10 +84,10 @@ class Parsian extends AbstractGate
     {
         parent::dispatchRequest();
 
-        if (isset($_POST['status']) and $this->status == 0) {
-            $this->status = true;
+        if (isset($_POST['status'])) {
+            $this->status = $_POST['status'];
         } else {
-            $this->status = false;
+            $this->status = $_POST['status'];
         }
 
         if (isset($_POST['Token'])) {
@@ -159,16 +159,18 @@ class Parsian extends AbstractGate
                     "requestData" => $params
                 ));
 
-                $this->response = [
+                $this->response['verify'] = [
                     'Status' => $result->ConfirmPaymentResult->Status,
                     'Message' => $result->ConfirmPaymentResult->Message
                 ];
 
+                $this->response['post'] = $_POST;
+
                 if ($result->ConfirmPaymentResult->Status == '0') {
-                    $this->status = true;
+                    $this->status = $result->ConfirmPaymentResult->Status;
                     return $this;
                 } else {
-                    $this->status = false;
+                    $this->status = $result->ConfirmPaymentResult->Status;
                     \Yii::warning($result->ConfirmPaymentResult->Status, static::class);
                     \Yii::warning($result->ConfirmPaymentResult->Message, static::class);
                 }
@@ -185,7 +187,7 @@ class Parsian extends AbstractGate
      */
     public function getStatus(): bool
     {
-        return $this->status;
+        return ($this->status == 0 or $this->status === true);
     }
 
     /**

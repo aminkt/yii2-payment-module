@@ -38,7 +38,7 @@ trait LogTrait
      *
      * @param \aminkt\yii2\payment\gates\AbstractGate   $gate
      *
-     * @throws \aminkt\payment\exceptions\SecurityException
+     * @throws \aminkt\exceptions\SecurityException
      *
      * @return bool
      */
@@ -101,7 +101,7 @@ trait LogTrait
     /**
      * Save transaction data in db when inquiry request send and return true if its work correctly.
      *
-     * @param AbstractGate       $gate
+     * @param \aminkt\yii2\payment\gates\AbstractGate       $gate
      * @param TransactionInquiry $inquiryModel
      *
      * @return bool
@@ -132,7 +132,7 @@ trait LogTrait
             ->setStatus($gate->getStatus())
             ->setTransactionInquiry($inquiryModel)
             ->setTransactionSession($inquiryModel->transactionSession);
-        \Yii::$app->trigger(\aminkt\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
+        \Yii::$app->trigger(\aminkt\yii2\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
         return true;
     }
 
@@ -189,8 +189,8 @@ trait LogTrait
     /**
      * Save transactions logs.
      *
-     * @param \aminkt\payment\models\TransactionSession $transactionSession
-     * @param \aminkt\payment\lib\AbstractGate          $gate
+     * @param \aminkt\yii2\payment\models\TransactionSession $transactionSession
+     * @param \aminkt\yii2\payment\gates\AbstractGate          $gate
      * @param string                                    $status
      *
      * @return void
@@ -217,7 +217,7 @@ trait LogTrait
      *
      * @return TransactionSession
      *
-     * @throws NotFoundHttpException
+     * @throws \RuntimeException
      */
     private function updatePaymentDataInDatabase($session, $col, $value)
     {
@@ -227,6 +227,6 @@ trait LogTrait
             return $session;
         }
 
-        throw new InvalidAmountException("Cant save data into database.");
+        throw new \RuntimeException("Cant save data into database.");
     }
 }
