@@ -3,8 +3,9 @@
 namespace aminkt\yii2\payment\gates;
 
 use aminkt\exceptions\RequestPaymentException;
-use aminkt\yii2\payment\exceptions\ConnectionException;
-use aminkt\yii2\payment\exceptions\VerifyPaymentException;
+use aminkt\exceptions\ConnectionException;
+use aminkt\exceptions\VerifyPaymentException;
+use aminkt\yii2\payment\interfaces\GateInterface;
 use SoapClient;
 use SoapFault;
 
@@ -22,9 +23,6 @@ use SoapFault;
  */
 class MellatGate extends AbstractGate
 {
-    public static $transBankName = 'Mellat';
-    public static $gateId = 'Masdawf8';
-
     private $client;
     private $namespace;
 
@@ -35,11 +33,9 @@ class MellatGate extends AbstractGate
     /**
      * @inheritdoc
      */
-    public function dispatchRequest()
+    public function dispatchRequest(): bool
     {
-        if (parent::dispatchRequest()) {
-            return true;
-        }
+        parent::dispatchRequest();
 
         $this->statusCode = $_POST['ResCode'];
         $this->setOrderId($_POST['SaleOrderId']);
@@ -59,6 +55,23 @@ class MellatGate extends AbstractGate
         return false;
     }
 
+
+
+    /**
+     * Connect to bank web service to check gate is available or not.
+     *
+     * @return GateInterface
+     *
+     * @throws \aminkt\exceptions\ConnectionException   When connection become failed.
+     *
+     * @author Amin Keshavarz <ak_1596@yahoo.com>
+     */
+    public function connect(): GateInterface
+    {
+        $this->connectToWebService();
+        return $this;
+    }
+
     private function connectToWebService(){
         try{
             $this->client = new SoapClient($this->identityData['webService'], array(
@@ -68,24 +81,20 @@ class MellatGate extends AbstractGate
             $this->namespace = 'http://interfaces.core.sw.bps.com/';
             return true;
         }catch (SoapFault $fault){
-            throw $fault;
+            throw new \aminkt\exceptions\ConnectionException($fault->getMessage(), $fault->getCode(), $fault);
         } catch (\ErrorException $e) {
-            throw new \Exception($e->getMessage(), $e->getCode(), $e);
+            throw new \aminkt\exceptions\ConnectionException($e->getMessage(), $e->getCode(), $e);
         }catch (\Exception $e){
-            throw $e;
+            throw new \aminkt\exceptions\ConnectionException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
     /**
      * @inheritdoc
      */
-    public function payRequest()
+    public function payRequest(): GateInterface
     {
         try{
-            if(!$this->connectToWebService()){
-                throw new ConnectionException("Can not connect to Mellat bank web service.", 1);
-            }
-
             // قرار دادن پارامترها در یک آرایه
             $parameters = array(
                 'terminalId' => $this->getIdentityTerminalId(),
@@ -116,12 +125,13 @@ class MellatGate extends AbstractGate
                 $this->statusCode = $resCode;
                 if($resCode == 0){
                     $this->setAuthority($res[1]);
-                    return true;
+                    return $this;
                 }else{
                     throw new ConnectionException("Mellat bank is not in service.", 3);
                 }
-            } else
+            } else {
                 throw new RequestPaymentException("Response not converted to array.", 4);
+            }
 
         }catch (SoapFault $f) {
             throw new ConnectionException($f->getMessage(), 5, $f);
@@ -129,13 +139,13 @@ class MellatGate extends AbstractGate
             throw new ConnectionException($e->getMessage(), 6, $e);
         }
 
-        return false;
+        return $this;
     }
 
     /**
      * @inheritdoc
      */
-    public function redirectToBankFormData()
+    public function redirectToBankFormData(): array
     {
         $bankUrl = $this->getIdentityData('bankGatewayAddress');
         $refId = $this->getAuthority();
@@ -153,7 +163,7 @@ class MellatGate extends AbstractGate
      * Verify Transaction if its paid. this method should call in callback from bank.
      * @return AbstractGate|boolean
      */
-    public function verifyTransaction()
+    public function verifyTransaction(): GateInterface
     {
         $status = $this->dispatchRequest();
 
@@ -291,7 +301,7 @@ class MellatGate extends AbstractGate
      * Return bank requests as array.
      * @return array
      */
-    public function getRequest()
+    public function getRequest(): array
     {
         return $this->request;
     }
@@ -300,7 +310,7 @@ class MellatGate extends AbstractGate
      * Return bank response as array.
      * @return array
      */
-    public function getResponse()
+    public function getResponse(): array
     {
         return $this->response;
     }
@@ -309,7 +319,7 @@ class MellatGate extends AbstractGate
      * Return status of pay request, verify or inquiry request.
      * @return boolean
      */
-    public function getStatus()
+    public function getStatus(): bool
     {
         return $this->statusCode == 0;
     }

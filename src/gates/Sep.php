@@ -20,8 +20,6 @@ use yii\httpclient\Client;
  */
 class Sep extends AbstractGate
 {
-    public static $transBankName = 'Saman';
-    public static $gateId = 'Saman5W8';
     protected $response;
     protected $stateCode;
     protected $state;
