@@ -18,7 +18,8 @@
       "ext-openssl": "*",
       "ext-soap": "*",
       "yiisoft/yii2-httpclient": "~2.0.0",
-      "aminkt/yii2-custom-exceptions": "v1.0.0.x-dev"
+      "aminkt/payment": "v1.0.0.x-dev",
+      "aminkt/exceptions": "v1.0.0.x-dev"
     },
   "autoload": {
     "psr-4": {
