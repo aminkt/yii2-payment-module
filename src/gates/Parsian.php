@@ -194,7 +194,7 @@ class Parsian extends AbstractGate
      */
     public function getRequest(): array
     {
-        return $this->getRequest();
+        return $this->request;
     }
 
     /**
@@ -202,6 +202,6 @@ class Parsian extends AbstractGate
      */
     public function getResponse(): array
     {
-        return $this->getResponse();
+        return $this->response;
     }
 }

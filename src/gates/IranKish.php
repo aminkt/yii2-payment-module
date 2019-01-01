@@ -24,7 +24,6 @@ use SoapClient;
 class IranKish extends AbstractGate
 {
     private $token;
-    private $terminalNumber;
 
     public $status;
     private $response = [];
@@ -77,34 +76,22 @@ class IranKish extends AbstractGate
     {
         parent::dispatchRequest();
 
-        if (isset($_POST['status'])) {
-            $this->status = $_POST['status'];
+        if (isset($_POST['ResultCode'])) {
+            $this->status = $_POST['ResultCode'];
         } else {
-            $this->status = $_POST['status'];
+            $this->status = false;
         }
 
         if (isset($_POST['Token'])) {
             $this->token = $_POST['Token'];
         }
 
-        if (isset($_POST['RRN'])) {
-            $this->setAuthority($_POST['RRN']);
+        if (isset($_POST['ReferenceId'])) {
+            $this->setAuthority($_POST['ReferenceId']);
         }
 
-        if (isset($_POST['OrderId'])) {
-            $this->setOrderId($_POST['OrderId']);
-        }
-
-        if (isset($_POST['HashCardNumber'])) {
-            $this->setCardHash($_POST['HashCardNumber']);
-        }
-
-        if(isset($_POST['CardNumberMasked'])) {
-            $this->setCardPan($_POST['CardNumberMasked']);
-        }
-
-        if (isset($_POST['TerminalNo'])) {
-            $this->terminalNumber = $_POST['TerminalNo'];
+        if (isset($_POST['InvoiceNumber'])) {
+            $this->setOrderId($_POST['InvoiceNumber']);
         }
 
         return true;
@@ -142,36 +129,33 @@ class IranKish extends AbstractGate
     {
         $this->dispatchRequest();
 
-        if ($this->getAuthority() > 0 and $this->getStatus() and $this->token) {
+
+
+        if ($this->getAuthority() and $this->getStatus() and $this->token) {
 
             $params = array(
-                "LoginAccount" => $this->getIdentityPin(),
-                "Token" => $this->token
+                "token" => $this->token,
+                "merchantId" => $this->getIdentityMerchantId(),
+                "referenceNumber" => $this->getAuthority(),
             );
+
 
             $this->request = $params;
 
-            $client = new SoapClient (static::$verifyUrl);
+            $client = new SoapClient($this->getIdentityVerifyUrl(), array('soap_version'   => SOAP_1_1));
 
             try {
-                $result = $client->ConfirmPayment(array(
-                    "requestData" => $params
-                ));
+                $result = $client->__soapCall("KicccPaymentsVerification", array($params));
 
-                $this->response['verify'] = [
-                    'Status' => $result->ConfirmPaymentResult->Status,
-                    'Message' => $result->ConfirmPaymentResult->Message
-                ];
 
                 $this->response['post'] = $_POST;
 
-                if ($result->ConfirmPaymentResult->Status == '0') {
-                    $this->status = $result->ConfirmPaymentResult->Status;
+                if ($result > 0 and $result == $this->getAmount(true)) {
+                    $this->status = true;
                     return $this;
                 } else {
-                    $this->status = $result->ConfirmPaymentResult->Status;
-                    \Yii::warning($result->ConfirmPaymentResult->Status, static::class);
-                    \Yii::warning($result->ConfirmPaymentResult->Message, static::class);
+                    $this->status = false;
+                    \Yii::warning("Can not verify user transaction.", static::class);
                 }
             } catch (\Exception $ex) {
                 $this->status = false;
@@ -186,7 +170,7 @@ class IranKish extends AbstractGate
      */
     public function getStatus(): bool
     {
-        return ($this->status == 0 or $this->status === true);
+        return ($this->status == 100 or $this->status === true);
     }
 
     /**
@@ -194,7 +178,7 @@ class IranKish extends AbstractGate
      */
     public function getRequest(): array
     {
-        return $this->getRequest();
+        return $this->request;
     }
 
     /**
@@ -202,6 +186,6 @@ class IranKish extends AbstractGate
      */
     public function getResponse(): array
     {
-        return $this->getResponse();
+        return $this->response;
     }
 }
