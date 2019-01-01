@@ -1,3 +1,10 @@
+# Contribute on this project
+
+If you want i will happy to use your help to improve this project.
+For contributing please refer to this link.
+
+[Contributing guide lines](contributing.md)
+
 # How to install this module:
 
 Step1: Add flowing line to require part of `composer.json` :
