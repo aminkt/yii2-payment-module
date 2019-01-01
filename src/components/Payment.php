@@ -298,7 +298,7 @@ HTML;
                         }
                         \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\aminkt\exceptions\SecurityException $exception) {
-                        \Yii::error("Try to duble spending");
+                        \Yii::error("Try to double spending");
                         throw $exception;
                     }
                 }

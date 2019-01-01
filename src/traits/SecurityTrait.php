@@ -101,7 +101,7 @@ trait SecurityTrait
         if (\Yii::$app->getCache()->exists($this->getBlockKey())) {
             return true;
         }
-        if ($this->getBlockCounter() >= $this->alowedCredentialErrors) {
+        if ($this->getBlockCounter() >= $this->allowedCredentialErrors) {
             $this->blockPaymentServices();
             return true;
         }

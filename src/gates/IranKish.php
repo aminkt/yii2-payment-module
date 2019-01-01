@@ -23,9 +23,8 @@ use SoapClient;
  */
 class IranKish extends AbstractGate
 {
-    private $token;
-
     public $status;
+    private $token;
     private $response = [];
     private $request = [];
 
@@ -43,7 +42,7 @@ class IranKish extends AbstractGate
 
         $this->request = $params;
 
-        $client = new SoapClient($this->getIdentityPayRequestUrl(), array('soap_version'   => SOAP_1_1));
+        $client = new SoapClient($this->getIdentityPayRequestUrl(), array('soap_version' => SOAP_1_1));
 
         try {
             $result = $client->__soapCall("MakeToken", array($params));
@@ -67,34 +66,6 @@ class IranKish extends AbstractGate
         }
 
         throw new ConnectionException("Can not connect to IraniKish gate.");
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function dispatchRequest(): bool
-    {
-        parent::dispatchRequest();
-
-        if (isset($_POST['ResultCode'])) {
-            $this->status = $_POST['ResultCode'];
-        } else {
-            $this->status = false;
-        }
-
-        if (isset($_POST['Token'])) {
-            $this->token = $_POST['Token'];
-        }
-
-        if (isset($_POST['ReferenceId'])) {
-            $this->setAuthority($_POST['ReferenceId']);
-        }
-
-        if (isset($_POST['InvoiceNumber'])) {
-            $this->setOrderId($_POST['InvoiceNumber']);
-        }
-
-        return true;
     }
 
     /**
@@ -130,7 +101,6 @@ class IranKish extends AbstractGate
         $this->dispatchRequest();
 
 
-
         if ($this->getAuthority() and $this->getStatus() and $this->token) {
 
             $params = array(
@@ -142,7 +112,7 @@ class IranKish extends AbstractGate
 
             $this->request = $params;
 
-            $client = new SoapClient($this->getIdentityVerifyUrl(), array('soap_version'   => SOAP_1_1));
+            $client = new SoapClient($this->getIdentityVerifyUrl(), array('soap_version' => SOAP_1_1));
 
             try {
                 $result = $client->__soapCall("KicccPaymentsVerification", array($params));
@@ -161,8 +131,38 @@ class IranKish extends AbstractGate
                 $this->status = false;
                 \Yii::warning($ex->getMessage(), static::class);
             }
+        } else {
+            $this->status = false;
         }
         return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function dispatchRequest(): bool
+    {
+        parent::dispatchRequest();
+
+        if (isset($_POST['ResultCode'])) {
+            $this->status = $_POST['ResultCode'];
+        } else {
+            $this->status = false;
+        }
+
+        if (isset($_POST['Token'])) {
+            $this->token = $_POST['Token'];
+        }
+
+        if (isset($_POST['ReferenceId'])) {
+            $this->setAuthority($_POST['ReferenceId']);
+        }
+
+        if (isset($_POST['InvoiceNumber'])) {
+            $this->setOrderId($_POST['InvoiceNumber']);
+        }
+
+        return true;
     }
 
     /**

@@ -7,6 +7,7 @@ use aminkt\exceptions\SecurityException;
 use aminkt\yii2\payment\models\TransactionInquiry;
 use aminkt\yii2\payment\models\TransactionLog;
 use aminkt\yii2\payment\models\TransactionSession;
+use aminkt\yii2\payment\Payment;
 use \yii\helpers\Html;
 use aminkt\yii2\payment\components\PaymentEvent;
 
@@ -132,7 +133,7 @@ trait LogTrait
             ->setStatus($gate->getStatus())
             ->setTransactionInquiry($inquiryModel)
             ->setTransactionSession($inquiryModel->transactionSession);
-        \Yii::$app->trigger(\aminkt\yii2\payment\Payment::EVENT_PAYMENT_INQUIRY, $event);
+        \Yii::$app->trigger(Payment::BEFORE_PAYMENT_INQUIRY, $event);
         return true;
     }
 

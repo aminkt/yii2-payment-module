@@ -69,7 +69,7 @@ class Payment extends \yii\base\Module
     {
         parent::init();
         if(!$this->orderClass) {
-            throw new InvalidConfigException("Order calss should define.");
+            throw new InvalidConfigException("Order class should define.");
         }
     }
 
