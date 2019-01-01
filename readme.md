@@ -119,7 +119,7 @@ You can also define below attribute in payment component config to change defaul
 
 
 | Attribute               | Default value | Description |
----------------------------------------------------------
+|-------------------------|---------------|-------------|
 | encryptKey              | Null          | Encrypt key should be safe and long to encrypt payment token and is required.|
 | bankTimeout             | Null          | Time that system can validate bank response. Default is null. Set time in second that if user returned from bank then system accept the response. If user do not return from bank in defined time then response will not accept. |
 | blockTime               | 86400         | This value define if a user blocked how much should prevent action from that. If set null for ever considered. Value should be in second |
@@ -140,7 +140,7 @@ List of gates:
 
 
 | Name                            | Bank                                   | Contributor                        | Configuration array                   |
----------------------------------------------------------------------------------------------------------------------------------------------------------
+|---------------------------------|----------------------------------------|------------------------------------|---------------------------------------|
 | `\aminkt\yii2\gates\Sep`        | [Saman](https://www.sb24.com)          | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#sep)        |
 | `\aminkt\yii2\gates\MellatGate` | [Mellat](http://behpardakht.com)       | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#mellatgate) |
 | `\aminkt\yii2\gates\Parsian`    | [Parsian](https://www.parsian-bank.ir) | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#parsian)    |
