@@ -54,15 +54,15 @@ class Payment extends Component
 
     /**
      * Time that system can validate bank response. Default is null. Set time in second that if user returned from bank
-     * then system accept the response. If user do not return from bank in defined time then reponse will not accept.
+     * then system accept the response. If user do not return from bank in defined time then response will not accept.
      *
      * @var integer $bankTimeout
      */
-    public $bankTimeout;
+    public $bankTimeout = null;
 
     /**
      * Block time. this value define if a user blocked how much should prevent action from that.
-     * If set null for ever considred.
+     * If set null for ever considered.
      * Value should be in second. default value is 86400 mean 1 day.
      *
      * @var integer
@@ -70,11 +70,11 @@ class Payment extends Component
     public $blockTime = 86400;
 
     /**
-     * Max alowed times that a user can has credential errors.
+     * Max allowed times that a user can has credential errors.
      * Default value is 5 times. after that user will block.
      * @var int
      */
-    public $alowedCredentialErrors = 5;
+    public $allowedCredentialErrors = 5;
 
     /**
      * Define callback address.
