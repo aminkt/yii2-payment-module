@@ -258,11 +258,12 @@ ZarinPal
 
 # Reports:
 
+In older versions you can use some routes to see some views in your backend panel for logs but in this current
+we improve our module to use in rest modules so you still have a route to read logs but as `RESTAPI`.
 
-In your backend panel you can use module routes to see various reports include Transaction sessions, payment logs, Inquiry requests and bank shortage data.
-
+This part documents not complete yet. 
 
 
 # Structure of tables and classes:
 
-![Data base scheme](doc/structure.png){ width: 100%; }
+![Data base scheme](doc/structure.png)
