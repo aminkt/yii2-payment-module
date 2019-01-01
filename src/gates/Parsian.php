@@ -14,6 +14,9 @@ use SoapClient;
  *
  * @method string getIdentityPin()  Return terminal pin code.
  * @method string getIdentityTerminal() Return terminal number.
+ * @method string getIdentityPayRequestUrl()  Web service url that gate object will send pay request to that.
+ * @method string getIdentityVerifyUrl()  Verify transaction url.
+ * @method string getIdentityGateAddress()  Gate address that user will redirect to that,
  *
  * @package aminkt\yii2\payment\gates
  *
@@ -21,10 +24,6 @@ use SoapClient;
  */
 class Parsian extends AbstractGate
 {
-    public static $payRequestUrl = 'https://pec.shaparak.ir/NewIPGServices/Sale/SaleService.asmx?WSDL';
-    public static $verifyUrl = "https://pec.shaparak.ir/NewIPGServices/Confirm/ConfirmService.asmx?WSDL";
-    public static $gateAddress = 'https://pec.shaparak.ir/NewIPG/';
-
     private $token;
     private $terminalNumber;
 
@@ -46,7 +45,7 @@ class Parsian extends AbstractGate
 
         $this->request = $params;
 
-        $client = new SoapClient (static::$payRequestUrl);
+        $client = new SoapClient ($this->getIdentityPayRequestUrl());
 
         try {
             $result = $client->SalePaymentRequest(array(
@@ -130,7 +129,7 @@ class Parsian extends AbstractGate
      */
     public function redirectToBankFormData(): array
     {
-        $gateAddress = static::$gateAddress;
+        $gateAddress = $this->getIdentityGateAddress();
         return [
             'redirect' => "{$gateAddress}?Token=" . $this->token
         ];
@@ -152,7 +151,7 @@ class Parsian extends AbstractGate
 
             $this->request = $params;
 
-            $client = new SoapClient (static::$verifyUrl);
+            $client = new SoapClient ($this->getIdentityVerifyUrl());
 
             try {
                 $result = $client->ConfirmPayment(array(

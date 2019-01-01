@@ -139,18 +139,41 @@ You can contribute your gates to this report and help me to improve productivity
 List of gates:
 
 
-| Name                            | Bank                                   | Contributor                        | Configuration array                   |
-|---------------------------------|----------------------------------------|------------------------------------|---------------------------------------|
-| `\aminkt\yii2\gates\Sep`        | [Saman](https://www.sb24.com)          | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#sep)        |
-| `\aminkt\yii2\gates\MellatGate` | [Mellat](http://behpardakht.com)       | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#mellatgate) |
-| `\aminkt\yii2\gates\Parsian`    | [Parsian](https://www.parsian-bank.ir) | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#parsian)    |
-| `\aminkt\yii2\gates\IranKish`   | [IranKish](http://www.kiccc.com)       | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#irankish)   |
-| `\aminkt\yii2\gates\ZarinPal`   | [Zarinpal](http://zarinpal.com)        | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#zarinpal)   |
+| Name                            | Bank                                   | Contributor                        | Configuration array                         |
+|---------------------------------|----------------------------------------|------------------------------------|---------------------------------------------|
+| `\aminkt\yii2\gates\Sep`        | [Saman](https://www.sb24.com)          | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#sep)              |
+| `\aminkt\yii2\gates\MellatGate` | [Mellat](http://behpardakht.com)       | Amin Keshavarz <ak_1596@yahoo.com> | [Mellat gate configuration](#mellatgate)    |
+| `\aminkt\yii2\gates\Parsian`    | [Parsian](https://www.parsian-bank.ir) | Amin Keshavarz <ak_1596@yahoo.com> | [Parsian gate configuration](#parsian)      |
+| `\aminkt\yii2\gates\IranKish`   | [IranKish](http://www.kiccc.com)       | Amin Keshavarz <ak_1596@yahoo.com> | [IraniKish gate configuration](#irankish)   |
+| `\aminkt\yii2\gates\ZarinPal`   | [Zarinpal](http://zarinpal.com)        | Amin Keshavarz <ak_1596@yahoo.com> | [ZarinPal gate configuration](#zarinpal)    |
 
 
 
 # Create gate class
 
+To create gate class you should create a new class in your application and extend it from `\aminkt\yii2\payment\gates\AbstractGate`.
+
+Implement uncompleted methods and then use below rule to read identity data and configurations from module configuration:
+
+As you know every gate has some configuration that user will prepare that as array. you can access this config from your gate by calling
+`getIdentity` methods.
+
+For example if user use below configuration:
+```php
+[
+    'class' => \name\space\of\your\CustomGate::class,
+    'password' => 'some password',
+    'verifyUrl' => 'http://your/verify.url'
+]
+```
+
+Then in `CustomGate` you can access below methods:
+```php
+getIdentityPassword();
+getIdentityVerifyUrl();
+```
+
+Implement your gate. see examples and if you like contribute it in this repo.
 
 Gate configurations
 ------------
@@ -190,14 +213,29 @@ MellatGate
 Parsian
 --------
 ```php
-
+'Parsian' => [
+    'class' => \aminkt\yii2\payment\gates\Parsian::class,
+    'identityData' => [
+        'payRequestUrl' => 'https://pec.shaparak.ir/NewIPGServices/Sale/SaleService.asmx?WSDL',
+        'verifyUrl' => 'https://pec.shaparak.ir/NewIPGServices/Confirm/ConfirmService.asmx?WSDL',
+        'gateAddress' => 'https://pec.shaparak.ir/NewIPG/',
+        'pin' => '**********',
+        'terminal' => '********'
+    ]
+]
 
 ```
 
 IranKish
 --------
 ```php
-
+'IranKish' => [
+    'class' => \aminkt\yii2\payment\gates\IranKish::class,
+    'payRequestUrl' => 'https://ikc.shaparak.ir/XToken/Tokens.xml',
+    'verifyUrl' => 'https://ikc.shaparak.ir/XVerify/Verify.xml',
+    'gateAddress' => 'https://ikc.shaparak.ir/TPayment/Payment/index',
+    'merchantId' => '******'
+]
 
 ```
 
@@ -221,7 +259,7 @@ ZarinPal
 # Reports:
 
 
-In you backend panel you can use module routes to see various reports include Transaction sessions, payment logs, Inquiry requests and bank shortage data.
+In your backend panel you can use module routes to see various reports include Transaction sessions, payment logs, Inquiry requests and bank shortage data.
 
 
 

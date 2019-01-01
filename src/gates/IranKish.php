@@ -13,6 +13,9 @@ use SoapClient;
  * Implement Abstract gate to implement Parsian bank gate.
  *
  * @method string getIdentityMerchantId()  Return MerchantId
+ * @method string getIdentityPayRequestUrl()  Web service url that gate object will send pay request to that.
+ * @method string getIdentityVerifyUrl()  Verify transaction url.
+ * @method string getIdentityGateAddress()  Gate address that user will redirect to that,
  *
  * @package aminkt\yii2\payment\gates
  *
@@ -20,10 +23,6 @@ use SoapClient;
  */
 class IranKish extends AbstractGate
 {
-    public static $payRequestUrl = 'https://ikc.shaparak.ir/XToken/Tokens.xml';
-    public static $verifyUrl = "https://ikc.shaparak.ir/XVerify/Verify.xml";
-    public static $gateAddress = 'https://ikc.shaparak.ir/TPayment/Payment/index';
-
     private $token;
     private $terminalNumber;
 
@@ -45,7 +44,7 @@ class IranKish extends AbstractGate
 
         $this->request = $params;
 
-        $client = new SoapClient(static::$payRequestUrl, array('soap_version'   => SOAP_1_1));
+        $client = new SoapClient($this->getIdentityPayRequestUrl(), array('soap_version'   => SOAP_1_1));
 
         try {
             $result = $client->__soapCall("MakeToken", array($params));
@@ -124,9 +123,8 @@ class IranKish extends AbstractGate
      */
     public function redirectToBankFormData(): array
     {
-        $bankUrl = $this->getIdentityData('bankGatewayAddress');
         $data = [
-            'action' => $bankUrl,
+            'action' => $this->getIdentityGateAddress(),
             'method' => 'post',
             'inputs' => [
                 'token' => $this->token,
