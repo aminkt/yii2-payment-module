@@ -1,4 +1,4 @@
-How to install this module:
+# How to install this module:
 
 Step1: Add flowing line to require part of `composer.json` :
 ```
@@ -75,9 +75,8 @@ Before usage this extension, we'll also need to prepare the database.
 php yii migrate --migrationPath=@vendor/aminkt/yii2-payment-module/migrations
 ```
 
----
-Usage:
----
+# Usage:
+
 In your code when you want create a payment request use below code:
 ```php
 $payment = \aminkt\payment\Payment::getInstance()->payment;
@@ -113,10 +112,11 @@ if($verify) {
 `$verify` is `false` if verify action become failed and otherwise return an true.
 
 
-Security
----
+# Security
+
 Module will check security issues and log them in yii2 log system.
 You can also define below attribute in payment component config to change default behavior of security system.
+
 
 | Attribute               | Default value | Description |
 ---------------------------------------------------------
@@ -126,8 +126,9 @@ You can also define below attribute in payment component config to change defaul
 | allowedCredentialErrors | 5             | Max allowed times that a user can has credential errors |
 
 
-Gate configuration
---------------
+
+# Gate configuration
+
 
 Every gate has some configuration. In this module prepared some default gates that you can use.
 
@@ -136,6 +137,7 @@ If you want create your own gate please refer to [Create gate class](#create-gat
 You can contribute your gates to this report and help me to improve productivity.
 
 List of gates:
+
 
 | Name                            | Bank                                   | Contributor                        | Configuration array                   |
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,8 +148,8 @@ List of gates:
 | `\aminkt\yii2\gates\ZarinPal`   | [Zarinpal](http://zarinpal.com)        | Amin Keshavarz <ak_1596@yahoo.com> | [Sep gate configuration](#zarinpal)   |
 
 
-Create gate class
----------
+
+# Create gate class
 
 
 Gate configurations
@@ -159,8 +161,8 @@ Sep
 "Sep" => [
     'class' => \aminkt\payment\lib\Sep::className(),
     'identityData' => [
-        'MID' => '10745198',
-        'password' => '7614396',
+        'MID' => '******',
+        'password' => '******',
         'bankGatewayAddress' => 'https://sep.shaparak.ir/payment.aspx',
         'webService' => "https://sep.shaparak.ir/payments/referencepayment.asmx?WSDL",
     ]
@@ -216,12 +218,13 @@ ZarinPal
 
 ```
 
-Reports:
----
+# Reports:
+
 
 In you backend panel you can use module routes to see various reports include Transaction sessions, payment logs, Inquiry requests and bank shortage data.
 
----
-Structure of tables and classes:
----
+
+
+# Structure of tables and classes:
+
 ![Data base scheme](doc/structure.png){ width: 100%; }
