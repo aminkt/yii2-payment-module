@@ -4,8 +4,6 @@ use yii\db\Migration;
 
 class m170102_161634_init extends Migration
 {
-
-
     // Use safeUp/safeDown to run migration code within a transaction
     public function safeUp()
     {

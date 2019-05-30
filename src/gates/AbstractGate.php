@@ -196,7 +196,7 @@ abstract class AbstractGate extends Component implements GateInterface, GateLogI
      */
     public function getTrackingCode(): string
     {
-        return $this->trackingCode;
+        return $this->trackingCode ?? '000DISPATCHING_REQUEST000';
     }
 
     /**

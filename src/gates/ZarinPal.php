@@ -3,6 +3,7 @@
 namespace aminkt\yii2\payment\gates;
 
 use aminkt\yii2\payment\components\Payment;
+use \aminkt\yii2\payment\Payment as PaymentModule;
 use aminkt\yii2\payment\interfaces\GateInterface;
 use yii\httpclient\Client;
 
@@ -34,7 +35,9 @@ class ZarinPal extends AbstractGate
     {
         parent::dispatchRequest();
 
-        $this->setOrderId($_GET['oi']);
+        if (!PaymentModule::getInstance()->enableByPass) {
+            $this->setOrderId($_GET['oi']);
+        }
         if (isset($_GET['Authority'])) {
             $this->setAuthority($_GET['Authority']);
             return true;
@@ -168,7 +171,7 @@ class ZarinPal extends AbstractGate
      */
     public function getRequest(): array
     {
-        return $this->request;
+        return $this->request ?? [];
     }
 
     /**
@@ -178,7 +181,7 @@ class ZarinPal extends AbstractGate
      */
     public function getResponse(): array
     {
-        return $this->response;
+        return $this->response ?? [];
     }
 
     /**
@@ -188,6 +191,9 @@ class ZarinPal extends AbstractGate
      */
     public function getStatus(): bool
     {
-        return ($this->status == 100 or $this->status == 101) and ($this->status === true);
+        if (PaymentModule::getInstance()->enableByPass()) {
+            return true;
+        }
+        return ($this->status == 100 or $this->status == 101) or ($this->status === true);
     }
 }
