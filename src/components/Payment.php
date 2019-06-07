@@ -294,7 +294,7 @@ HTML;
                         $this->saveVerifyDataIntoDatabase($gateObject);
                         if ($this->enableByPass or $gateObject->getStatus()) {
                             \Yii::$app->getCache()->delete($locVerifyCacheName);
-                            return true;
+                            return $gateObject;
                         }
                         \Yii::$app->getCache()->delete($locVerifyCacheName);
                     } catch (\aminkt\exceptions\SecurityException $exception) {
