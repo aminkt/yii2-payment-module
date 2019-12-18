@@ -13,13 +13,17 @@
     	}
     ],
     "require": {
+      "php": ">=7.1",
       "yiisoft/yii2": "~2.0.11",
-      "aminkt/yii2-alert-widget": "dev-master",
-      "yiisoft/yii2-httpclient": "~2.0.0"
+      "ext-openssl": "*",
+      "ext-soap": "*",
+      "yiisoft/yii2-httpclient": "~2.0.0",
+      "aminkt/exceptions": "v1.0.0.x-dev"
     },
-    "autoload": {
-    	"psr-4": {
-    		"aminkt\\payment\\": ""
-    	}
+  "autoload": {
+    "psr-4": {
+      "aminkt\\yii2\\payment\\": "src",
+      "aminkt\\yii2\\payment\\\\test\\": "tests"
     }
+  }
 }
