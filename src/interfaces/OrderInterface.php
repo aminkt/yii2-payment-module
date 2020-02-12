@@ -39,4 +39,13 @@ interface OrderInterface
      * @author Amin Keshavarz <ak_1596@yahoo.com>
      */
     public function getId();
+
+    /**
+     * Get Order model by id.
+     *
+     * @param int   $id   Order id.
+     *
+     * @return $this
+     */
+    public static function getById(int $id);
 }

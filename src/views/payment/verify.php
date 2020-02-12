@@ -25,7 +25,4 @@ $this->title = "نتیجه تراکنش - تل بیت";
     <?php endif; ?>
 
     <br>    <br>    <br>    <br>
-    <p>
-        <?= \aminkt\yii2\payment\components\Payment::decryptBankName(Yii::$app->request->get('bc')) ?>
-    </p>
 </div>

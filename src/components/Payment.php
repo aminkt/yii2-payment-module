@@ -82,7 +82,7 @@ class Payment extends Component
      *
      * @var array $callbackUrl array for show router of callback
      */
-    public $callback = ['/payment/default/verify'];
+    public $callback = ['/payment/payment/verify'];
 
     /**
      * Enable by pass.

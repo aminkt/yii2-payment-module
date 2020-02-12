@@ -2,36 +2,38 @@
 
 namespace aminkt\yii2\payment\controllers;
 
+use aminkt\yii2\payment\interfaces\OrderInterface;
+use aminkt\yii2\payment\Payment;
+use Yii;
+use yii\base\ExitException;
+use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+
 /**
  * Class PaymentController
  * Handle payment request actions.
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  */
-class PaymentController extends \yii\web\Controller
+class PaymentController extends Controller
 {
     public $enableCsrfValidation = false;
 
     /**
      * Run pay request action.
      *
+     * @param $orderId
+     *
      * @return void
      *
-     * @author  Amin Keshavarz <ak_1596@yahoo.com>
-     * @throws \Exception
-     * @throws \yii\web\BadRequestHttpException
-     *
+     * @throws NotFoundHttpException
+     * @throws ExitException
      * @author  Amin Keshavarz <ak_1596@yahoo.com>
      */
     public function actionGate($orderId)
     {
         $model = $this->findModel($orderId);
-
-        $payment = \aminkt\yii2\payment\Payment::getInstance()
-            ->getPayment()
-            ->payRequest(
-                $model
-            );
+        $payment = Payment::getInstance()->getPayment()->payRequest($model);
         Yii::$app->end();
     }
 
@@ -44,7 +46,7 @@ class PaymentController extends \yii\web\Controller
      */
     public function actionVerify()
     {
-        $verify = \aminkt\yii2\payment\Payment::getInstance()
+        $verify = Payment::getInstance()
             ->getPayment()
             ->verify();
 
@@ -64,8 +66,9 @@ class PaymentController extends \yii\web\Controller
      */
     public function findModel($id)
     {
-        $class = \aminkt\yii2\payment\Payment::getInstance()->orderClass;
-        $model = $class::findOne($id);
+        /** @var OrderInterface $class */
+        $class = Payment::getInstance()->orderClass;
+        $model = $class::getById($id);
         if (!$model) {
             throw new NotFoundHttpException("Order dose not exist.");
         }

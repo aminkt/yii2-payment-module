@@ -85,8 +85,6 @@ class Parsian extends AbstractGate
 
         if (isset($_POST['status'])) {
             $this->status = $_POST['status'];
-        } else {
-            $this->status = $_POST['status'];
         }
 
         if (isset($_POST['Token'])) {
