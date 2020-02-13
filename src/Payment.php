@@ -1,17 +1,20 @@
 <?php
 
 namespace aminkt\yii2\payment;
+
+use aminkt\yii2\payment\interfaces\OrderInterface;
 use yii\base\InvalidConfigException;
+use yii\base\Module;
 
 /**
  * Payment module definition class
  *
- * @property \aminkt\yii2\payment\components\Payment $payment    Payment component.
+ * @property components\Payment $payment    Payment component.
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  * @package aminkt\payment
  */
-class Payment extends \yii\base\Module
+class Payment extends Module
 {
     const BEFORE_PAYMENT_REQUEST = 'before_payment_request';
     const AFTER_PAYMENT_REQUEST = 'after_payment_request';
@@ -23,7 +26,7 @@ class Payment extends \yii\base\Module
     /**
      * The order class name. Every payment session should have an order.
      *
-     * @var \aminkt\yii2\payment\interfaces\OrderInterface  $orderClass
+     * @var OrderInterface  $orderClass
      */
     public $orderClass;
 
@@ -101,7 +104,7 @@ class Payment extends \yii\base\Module
     /**
      * Return payment components.
      *
-     * @return \aminkt\yii2\payment\components\Payment
+     * @return components\Payment
      */
     public function getPayment()
     {

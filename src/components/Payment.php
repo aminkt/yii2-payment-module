@@ -11,6 +11,7 @@ use aminkt\yii2\payment\InvalidAmountException;
 use aminkt\yii2\payment\models\TransactionSession;
 use aminkt\yii2\payment\traits\LogTrait;
 use aminkt\yii2\payment\traits\SecurityTrait;
+use Yii;
 use yii\base\Component;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
@@ -185,9 +186,9 @@ class Payment extends Component
                     }
 
                 } catch (ConnectionException $exception) {
-                    \Yii::error("Gate not available now.", self::className());
-                    \Yii::error($exception->getMessage(), self::className());
-                    \Yii::error($exception->getTrace(), self::className());
+                    Yii::error("Gate not available now.", self::className());
+                    Yii::error($exception->getMessage(), self::className());
+                    Yii::error($exception->getTrace(), self::className());
                 }
             }
 
@@ -260,7 +261,7 @@ HTML;
     public function verify()
     {
         if (!self::isBlocked()) {
-            $token = \Yii::$app->getRequest()->get('token');
+            $token = Yii::$app->getRequest()->get('token');
             if ($gate = $this->decryptToken($token)) {
                 if (key_exists($gate, $this->gates)) {
                     $gateConfig = $this->gates[$gate];
@@ -281,11 +282,11 @@ HTML;
                         $gateObject->setAmount($session->amount);
 
                         $locVerifyCacheName = self::CACHE_LOC_VERIFY_PROCESS . '.' . $gateObject->getOrderId();
-                        while (\Yii::$app->getCache()->exists($locVerifyCacheName) and !YII_ENV_DEV) {
+                        while (Yii::$app->getCache()->exists($locVerifyCacheName) and !YII_ENV_DEV) {
                             // Wait for running verify request.
                         }
 
-                        \Yii::$app->getCache()->set($locVerifyCacheName, true);
+                        Yii::$app->getCache()->set($locVerifyCacheName, true);
 
                         if(!$this->enableByPass) {
                             $gateObject->verifyTransaction();
@@ -293,12 +294,12 @@ HTML;
 
                         $this->saveVerifyDataIntoDatabase($gateObject);
                         if ($this->enableByPass or $gateObject->getStatus()) {
-                            \Yii::$app->getCache()->delete($locVerifyCacheName);
+                            Yii::$app->getCache()->delete($locVerifyCacheName);
                             return $gateObject;
                         }
-                        \Yii::$app->getCache()->delete($locVerifyCacheName);
-                    } catch (\aminkt\exceptions\SecurityException $exception) {
-                        \Yii::error("Try to double spending");
+                        Yii::$app->getCache()->delete($locVerifyCacheName);
+                    } catch (SecurityException $exception) {
+                        Yii::error("Try to double spending");
                         throw $exception;
                     }
                 }
@@ -339,17 +340,17 @@ HTML;
                 return $inquiry;
             }
         } catch (ConnectionException $exception) {
-            \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
-            \Yii::error($exception->getMessage(), self::className());
-            \Yii::error($exception->getTrace(), self::className());
+            Yii::error("Gate " . self::$currentGateObject->getPSPName() . " not available now.", self::className());
+            Yii::error($exception->getMessage(), self::className());
+            Yii::error($exception->getTrace(), self::className());
         } catch (\RuntimeException $exception) {
-            \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in inquiry payment.", self::className());
-            \Yii::error($exception->getMessage(), self::className());
-            \Yii::error($exception->getTrace(), self::className());
+            Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has problem in inquiry payment.", self::className());
+            Yii::error($exception->getMessage(), self::className());
+            Yii::error($exception->getTrace(), self::className());
         } catch (\Exception $exception) {
-            \Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to inquiry payment request.", self::className());
-            \Yii::error($exception->getMessage(), self::className());
-            \Yii::error($exception->getTrace(), self::className());
+            Yii::error("Gate " . self::$currentGateObject->getPSPName() . " has a hard error while trying to inquiry payment request.", self::className());
+            Yii::error($exception->getMessage(), self::className());
+            Yii::error($exception->getTrace(), self::className());
             throw $exception;
         }
         return false;

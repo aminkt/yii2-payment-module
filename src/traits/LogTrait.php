@@ -4,10 +4,14 @@
 namespace aminkt\yii2\payment\traits;
 
 use aminkt\exceptions\SecurityException;
+use aminkt\yii2\payment\gates\AbstractGate;
+use aminkt\yii2\payment\interfaces\OrderInterface;
 use aminkt\yii2\payment\models\TransactionInquiry;
 use aminkt\yii2\payment\models\TransactionLog;
 use aminkt\yii2\payment\models\TransactionSession;
 use aminkt\yii2\payment\Payment;
+use RuntimeException;
+use Yii;
 use \yii\helpers\Html;
 use aminkt\yii2\payment\components\PaymentEvent;
 
@@ -37,9 +41,9 @@ trait LogTrait
     /**
      * Save transaction data in db when verify request send and return true if its work correctly.
      *
-     * @param \aminkt\yii2\payment\gates\AbstractGate   $gate
+     * @param AbstractGate   $gate
      *
-     * @throws \aminkt\exceptions\SecurityException
+     * @throws SecurityException
      *
      * @return bool
      */
@@ -75,8 +79,8 @@ trait LogTrait
         }
 
         if (!$transactionSession->save()) {
-            \Yii::error($transactionSession->getErrors(), self::className());
-            throw new \RuntimeException('Can not save transaction session data.', 12);
+            Yii::error($transactionSession->getErrors(), self::className());
+            throw new RuntimeException('Can not save transaction session data.', 12);
         } else {
             /**
              * Create an inquiry request for valid payments.
@@ -94,7 +98,7 @@ trait LogTrait
         $event->setGate($gate)
             ->setStatus($gate->getStatus())
             ->setTransactionSession($transactionSession);
-        \Yii::$app->trigger(\aminkt\yii2\payment\Payment::AFTER_PAYMENT_VERIFY, $event);
+        Yii::$app->trigger(Payment::AFTER_PAYMENT_VERIFY, $event);
         return true;
     }
 
@@ -102,7 +106,7 @@ trait LogTrait
     /**
      * Save transaction data in db when inquiry request send and return true if its work correctly.
      *
-     * @param \aminkt\yii2\payment\gates\AbstractGate       $gate
+     * @param AbstractGate       $gate
      * @param TransactionInquiry $inquiryModel
      *
      * @return bool
@@ -121,8 +125,8 @@ trait LogTrait
         }
 
         if (!$inquiryModel->save()) {
-            \Yii::error($inquiryModel->getErrors(), self::className());
-            throw new \RuntimeException('Can not save transaction inquiry data.', 12);
+            Yii::error($inquiryModel->getErrors(), self::className());
+            throw new RuntimeException('Can not save transaction inquiry data.', 12);
         }
 
         /**
@@ -133,7 +137,7 @@ trait LogTrait
             ->setStatus($gate->getStatus())
             ->setTransactionInquiry($inquiryModel)
             ->setTransactionSession($inquiryModel->transactionSession);
-        \Yii::$app->trigger(Payment::BEFORE_PAYMENT_INQUIRY, $event);
+        Yii::$app->trigger(Payment::BEFORE_PAYMENT_INQUIRY, $event);
         return true;
     }
 
@@ -141,8 +145,8 @@ trait LogTrait
     /**
      * Save payment data in db when pay request send and return true if its work correctly.
      *
-     * @param \aminkt\yii2\payment\gates\AbstractGate $gate Gate object.
-     * @param \aminkt\yii2\payment\interfaces\OrderInterface       $order   Order model.
+     * @param AbstractGate $gate Gate object.
+     * @param OrderInterface       $order   Order model.
      * @param string       $description
      *
      * @return TransactionSession
@@ -158,7 +162,7 @@ trait LogTrait
             'description' => Html::encode($description),
             'status' => TransactionSession::STATUS_NOT_PAID,
             'type' => TransactionSession::TYPE_WEB_BASE,
-            'ip' => \Yii::$app->getRequest()->getUserIP()
+            'ip' => Yii::$app->getRequest()->getUserIP()
         ]);
 
         if ($transactionSession->save()) {
@@ -178,21 +182,21 @@ trait LogTrait
             $event->setGate($gate)
                 ->setStatus($gate->getStatus())
                 ->setTransactionSession($transactionSession);
-            \Yii::$app->trigger(\aminkt\yii2\payment\Payment::BEFORE_PAYMENT_REQUEST, $event);
+            Yii::$app->trigger(Payment::BEFORE_PAYMENT_REQUEST, $event);
 
             return $transactionSession;
         }
 
-        \Yii::error($transactionSession->getErrors(), self::className());
-        throw new \RuntimeException("Can not saving data into database.", 10);
+        Yii::error($transactionSession->getErrors(), self::className());
+        throw new RuntimeException("Can not saving data into database.", 10);
     }
 
     /**
      * Save transactions logs.
      *
-     * @param \aminkt\yii2\payment\models\TransactionSession $transactionSession
-     * @param \aminkt\yii2\payment\gates\AbstractGate          $gate
-     * @param string                                    $status
+     * @param TransactionSession   $transactionSession
+     * @param AbstractGate         $gate
+     * @param string               $status
      *
      * @return void
      */
@@ -204,7 +208,7 @@ trait LogTrait
             'status' => $status,
             'request' => json_encode($gate->getRequest()),
             'response' => json_encode($gate->getResponse()),
-            'ip' => \Yii::$app->getRequest()->getUserIP(),
+            'ip' => Yii::$app->getRequest()->getUserIP(),
         ]);
         $log->save(false);
     }
@@ -218,7 +222,7 @@ trait LogTrait
      *
      * @return TransactionSession
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     private function updatePaymentDataInDatabase($session, $col, $value)
     {
@@ -228,6 +232,6 @@ trait LogTrait
             return $session;
         }
 
-        throw new \RuntimeException("Cant save data into database.");
+        throw new RuntimeException("Cant save data into database.");
     }
 }
