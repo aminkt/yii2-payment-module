@@ -44,7 +44,7 @@ class Payment extends Module
      *
      * @var integer $maxAmount
      */
-    public $maxAmount = 10000000;
+    public $maxAmount = 5000000000;
 
     /**
      * Configurations of payment component provided by this module.
