@@ -53,7 +53,7 @@ class Payment extends \yii\base\Module
     /**
      * @inheritdoc
      */
-    public $controllerNamespace = 'aminkt\payment\controllers\frontend';
+    public $controllerNamespace = 'aminkt\yii2\payment\controllers';
 
     /**
      * Enable by pass action to test payment in your app.
