@@ -185,9 +185,9 @@ class Payment extends Component
                     }
 
                 } catch (ConnectionException $exception) {
-                    \Yii::error("Gate not available now.", self::className());
-                    \Yii::error($exception->getMessage(), self::className());
-                    \Yii::error($exception->getTrace(), self::className());
+                    \Yii::error("Gate not available now.", self::class);
+                    \Yii::error($exception->getMessage(), self::class);
+                    \Yii::error($exception->getTrace(), self::class);
                 }
             }
 
