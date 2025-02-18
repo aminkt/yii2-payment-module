@@ -13,7 +13,7 @@ use yii\base\Event;
  */
 class PaymentEvent extends Event
 {
-    /** @var  boolean $status Payment status */
+    /** @var  boolean $status PaymentProvider status */
     public $status;
 
     /** @var null|TransactionInquiry $transactionInquiry */

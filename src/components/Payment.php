@@ -18,7 +18,7 @@ use yii\helpers\Html;
 use yii\web\NotFoundHttpException;
 
 /**
- * Class Payment
+ * Class PaymentProvider
  *
  * Define payment component that implement a clean interface to payment action.
  *

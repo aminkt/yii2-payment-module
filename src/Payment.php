@@ -4,9 +4,9 @@ namespace aminkt\yii2\payment;
 use yii\base\InvalidConfigException;
 
 /**
- * Payment module definition class
+ * PaymentProvider module definition class
  *
- * @property \aminkt\yii2\payment\components\Payment $payment    Payment component.
+ * @property \aminkt\yii2\payment\components\Payment $payment    PaymentProvider component.
  *
  * @author Amin Keshavarz <ak_1596@yahoo.com>
  * @package aminkt\payment
