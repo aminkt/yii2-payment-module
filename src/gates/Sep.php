@@ -96,7 +96,7 @@ class Sep extends AbstractGate
         $status = $this->dispatchRequest();
 
         if (!$status) {
-            throw new VerifyPaymentException("PaymentProvider become failed because of " . $this->state, $this->stateCode);
+            throw new VerifyPaymentException("Payment become failed because of " . $this->state, $this->stateCode);
         }
 
         try {

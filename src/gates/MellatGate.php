@@ -168,7 +168,7 @@ class MellatGate extends AbstractGate
         $status = $this->dispatchRequest();
 
         if (!$status) {
-            throw new VerifyPaymentException("PaymentProvider become failed because of " . $this->statusCode, $this->statusCode);
+            throw new VerifyPaymentException("Payment become failed because of " . $this->statusCode, $this->statusCode);
         }
 
         try{

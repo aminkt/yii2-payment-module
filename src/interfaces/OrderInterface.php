@@ -6,7 +6,7 @@ namespace aminkt\yii2\payment\interfaces;
 /**
  * Interface OrderInterface
  * Order model should extend from this OrderInterface.
- * PaymentProvider module will use this order model to initialize a payment request.
+ * Payment module will use this order model to initialize a payment request.
  * Every payment request should has a order model that you should implement it.
  *
  * @see https://github.com/aminkt/yii2-ordering-module If you need implement a ordering system.

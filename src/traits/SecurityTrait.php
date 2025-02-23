@@ -8,7 +8,7 @@ use aminkt\exceptions\SecurityException;
 /**
  * Trait SecurityTrait
  *
- * This trait used in component `\aminkt\yii2\payment\components\PaymentProvider`.
+ * This trait used in component `\aminkt\yii2\payment\components\Payment`.
  *
  * @see     \aminkt\yii2\payment\components\Payment
  *

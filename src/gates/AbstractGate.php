@@ -28,10 +28,10 @@ abstract class AbstractGate extends Component implements GateInterface, GateLogI
     /** @var  string $orderId Order id */
     protected $orderId;
 
-    /** @var  string $authority PaymentProvider authority */
+    /** @var  string $authority Payment authority */
     protected $authority;
 
-    /** @var  string $trackingCode PaymentProvider tracking code */
+    /** @var  string $trackingCode Payment tracking code */
     protected $trackingCode;
 
     /** @var  string $cardPan Payer card pan */

@@ -14,7 +14,7 @@ use aminkt\yii2\payment\components\PaymentEvent;
 /**
  * Trait LogTrait
  *
- * This trait used in component `\aminkt\yii2\payment\components\PaymentProvider`.
+ * This trait used in component `\aminkt\yii2\payment\components\Payment`.
  *
  * This trait will save payment data into database.
  *

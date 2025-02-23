@@ -111,7 +111,7 @@ $verify = Payment::getInstance()
             ->verify();
 
 if($verify) {
-    // PaymentProvider was successfull.
+    // Payment was successfull.
 } else {
     // Paymen verify become failed.
 }
